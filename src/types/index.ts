@@ -9,36 +9,31 @@ export interface Clinic {
   updated_at: string;
 }
 
-// 求人データの型定義
-export interface JobPosting {
+// 日別アクセスログの型定義
+export interface DailyMetrics {
   id: string;
   clinic_id: string;
-  job_title: string;
-  guppy_job_id: string;
+  date: string;
+  display_count: number;
+  view_count: number;
+  redirect_count: number;
+  application_count: number;
   created_at: string;
 }
 
-// メトリクス（PV、応募数）の型定義
-export interface Metrics {
-  id: string;
-  clinic_id: string;
-  job_posting_id: string | null;
-  pv_count: number;
-  application_count: number;
-  recorded_at: string;
+// スクレイピング結果の型定義（日別データ）
+export interface AccessLogEntry {
+  date: string;
+  displayCount: number;
+  viewCount: number;
+  redirectCount: number;
+  applicationCount: number;
 }
 
-// スクレイピング結果の型定義
 export interface ScrapeResult {
   clinicId: string;
   clinicName: string;
-  totalPV: number;
-  totalApplications: number;
-  jobs: {
-    title: string;
-    pv: number;
-    applications: number;
-  }[];
+  accessLogs: AccessLogEntry[];
   scrapedAt: Date;
 }
 
@@ -49,16 +44,13 @@ export interface DashboardData {
     name: string;
     slug: string;
   };
-  currentMetrics: {
-    totalPV: number;
-    totalApplications: number;
-    lastUpdated: string;
+  metrics: DailyMetrics[];
+  summary: {
+    totalDisplayCount: number;
+    totalViewCount: number;
+    totalRedirectCount: number;
+    totalApplicationCount: number;
   };
-  history: {
-    date: string;
-    pv: number;
-    applications: number;
-  }[];
 }
 
 // Discord通知用の型定義

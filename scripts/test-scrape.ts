@@ -1,32 +1,31 @@
 /**
- * GUPPYスクレイピングテストスクリプト
+ * GUPPYスクレイピングテストスクリプト v2
  *
  * 使用方法:
- * npx ts-node scripts/test-scrape.ts
- *
- * または、headlessモードをオフにしてデバッグ:
- * DEBUG=true npx ts-node scripts/test-scrape.ts
+ * node scripts/test-scrape.ts
  */
 
-import { chromium, Browser, Page } from 'playwright';
+const { chromium } = require('playwright');
+const fs = require('fs');
 
 const GUPPY_LOGIN_URL = 'https://www.guppy.jp/service/login';
+const GUPPY_ACCESS_LOG_URL = 'https://www.guppy.jp/service/access_logs';
+const GUPPY_APPLICANTS_URL = 'https://www.guppy.jp/service/applicants';
 
 // テスト用ログイン情報
 const TEST_LOGIN_ID = '0886556471';
 const TEST_PASSWORD = 'r6p6f67x';
 
 async function testGuppyScrape() {
-  console.log('=== GUPPYスクレイピングテスト開始 ===\n');
+  console.log('=== GUPPYスクレイピングテスト v2 ===\n');
 
   const isDebug = process.env.DEBUG === 'true';
-  let browser: Browser | null = null;
+  let browser = null;
 
   try {
-    // ブラウザ起動
     console.log('1. ブラウザを起動中...');
     browser = await chromium.launch({
-      headless: !isDebug, // DEBUG=trueの場合は画面表示
+      headless: !isDebug,
     });
 
     const context = await browser.newContext({
@@ -35,113 +34,112 @@ async function testGuppyScrape() {
 
     const page = await context.newPage();
 
-    // ログインページにアクセス
-    console.log('2. ログインページにアクセス中...');
+    // ログイン
+    console.log('2. ログイン中...');
     await page.goto(GUPPY_LOGIN_URL, { waitUntil: 'networkidle' });
-    console.log(`   現在のURL: ${page.url()}`);
 
-    // ページの構造を確認
-    console.log('\n3. ログインフォームの構造を確認中...');
+    await page.fill('input[name="data[Account][login_id]"]', TEST_LOGIN_ID);
+    await page.fill('input[name="data[Account][password]"]', TEST_PASSWORD);
+    await page.click('button[type="submit"]');
 
-    // input要素を探す
-    const inputs = await page.$$('input');
-    console.log(`   見つかったinput要素: ${inputs.length}個`);
-
-    for (const input of inputs) {
-      const type = await input.getAttribute('type');
-      const name = await input.getAttribute('name');
-      const id = await input.getAttribute('id');
-      const placeholder = await input.getAttribute('placeholder');
-      console.log(`   - type="${type}", name="${name}", id="${id}", placeholder="${placeholder}"`);
-    }
-
-    // ログインフォームに入力
-    console.log('\n4. ログイン情報を入力中...');
-
-    // IDとパスワードの入力（セレクタは実際のページに合わせて調整が必要）
-    const loginIdInput = await page.$('input[type="text"], input[name="login_id"], input[id="login_id"]');
-    const passwordInput = await page.$('input[type="password"]');
-
-    if (loginIdInput) {
-      await loginIdInput.fill(TEST_LOGIN_ID);
-      console.log('   ログインID入力: OK');
-    } else {
-      console.log('   警告: ログインID入力欄が見つかりません');
-    }
-
-    if (passwordInput) {
-      await passwordInput.fill(TEST_PASSWORD);
-      console.log('   パスワード入力: OK');
-    } else {
-      console.log('   警告: パスワード入力欄が見つかりません');
-    }
-
-    // スクリーンショット保存（ログイン前）
-    await page.screenshot({ path: 'debug-before-login.png' });
-    console.log('   スクリーンショット保存: debug-before-login.png');
-
-    // ログインボタンをクリック
-    console.log('\n5. ログインボタンをクリック中...');
-    const submitButton = await page.$('button[type="submit"], input[type="submit"], button:has-text("ログイン")');
-
-    if (submitButton) {
-      await submitButton.click();
-      console.log('   ログインボタンクリック: OK');
-    } else {
-      console.log('   警告: ログインボタンが見つかりません');
-    }
-
-    // ページ遷移を待つ
+    await page.waitForTimeout(2000);
     await page.waitForLoadState('networkidle');
-    console.log(`   ログイン後のURL: ${page.url()}`);
 
-    // スクリーンショット保存（ログイン後）
-    await page.screenshot({ path: 'debug-after-login.png' });
-    console.log('   スクリーンショット保存: debug-after-login.png');
+    console.log(`   ログイン後URL: ${page.url()}`);
 
-    // ログイン成功/失敗の判定
-    console.log('\n6. ログイン結果を確認中...');
-    const currentUrl = page.url();
+    // アクセスログページに移動
+    console.log('\n3. アクセスログページに移動中...');
+    await page.goto(GUPPY_ACCESS_LOG_URL, { waitUntil: 'networkidle' });
+    console.log(`   URL: ${page.url()}`);
 
-    if (currentUrl.includes('login')) {
-      console.log('   結果: ログイン失敗の可能性（まだログインページにいます）');
+    await page.screenshot({ path: 'debug-access-logs.png', fullPage: true });
+    console.log('   スクリーンショット保存: debug-access-logs.png');
 
-      // エラーメッセージを探す
-      const errorMessage = await page.$('.error, .alert-danger, [class*="error"]');
-      if (errorMessage) {
-        const errorText = await errorMessage.textContent();
-        console.log(`   エラーメッセージ: ${errorText}`);
-      }
-    } else {
-      console.log('   結果: ログイン成功！');
+    // HTMLを保存
+    const accessHtml = await page.content();
+    fs.writeFileSync('debug-access-logs.html', accessHtml);
+    console.log('   HTML保存: debug-access-logs.html');
 
-      // 管理画面の構造を確認
-      console.log('\n7. 管理画面の構造を確認中...');
-      const pageTitle = await page.title();
-      console.log(`   ページタイトル: ${pageTitle}`);
+    // テーブルデータを探す
+    console.log('\n4. アクセスデータを抽出中...');
 
-      // PV数や応募数を探す（実際の要素に合わせて調整が必要）
-      const bodyText = await page.textContent('body');
+    // テーブルからデータを取得
+    const tableData = await page.evaluate(() => {
+      const tables = document.querySelectorAll('table');
+      const results: string[][] = [];
 
-      // 数値っぽい要素を探す
-      if (bodyText) {
-        const pvMatch = bodyText.match(/PV[：:]\s*(\d+)/);
-        const applicationMatch = bodyText.match(/応募[：:]\s*(\d+)/);
+      tables.forEach((table, i) => {
+        const rows = table.querySelectorAll('tr');
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('th, td');
+          const rowData: string[] = [];
+          cells.forEach(cell => {
+            rowData.push((cell as HTMLElement).innerText.trim());
+          });
+          if (rowData.length > 0) {
+            results.push(rowData);
+          }
+        });
+      });
 
-        if (pvMatch) console.log(`   見つかったPV: ${pvMatch[1]}`);
-        if (applicationMatch) console.log(`   見つかった応募数: ${applicationMatch[1]}`);
-      }
+      return results;
+    });
 
-      // ページのHTMLを保存
-      const html = await page.content();
-      require('fs').writeFileSync('debug-page-content.html', html);
-      console.log('   ページHTML保存: debug-page-content.html');
+    console.log('   見つかったテーブルデータ:');
+    tableData.forEach((row: string[], i: number) => {
+      console.log(`   ${i}: ${row.join(' | ')}`);
+    });
+
+    // 数値を探す
+    const bodyText = await page.textContent('body');
+
+    // 総閲覧数のパターン
+    const totalPvMatch = bodyText?.match(/総閲覧[数：:\s]*([0-9,]+)/);
+    const totalAccessMatch = bodyText?.match(/総アクセス[数：:\s]*([0-9,]+)/);
+
+    if (totalPvMatch) console.log(`\n   総閲覧数: ${totalPvMatch[1]}`);
+    if (totalAccessMatch) console.log(`   総アクセス数: ${totalAccessMatch[1]}`);
+
+    // 応募者管理ページに移動
+    console.log('\n5. 応募者管理ページに移動中...');
+    await page.goto(GUPPY_APPLICANTS_URL, { waitUntil: 'networkidle' });
+    console.log(`   URL: ${page.url()}`);
+
+    await page.screenshot({ path: 'debug-applicants.png', fullPage: true });
+    console.log('   スクリーンショット保存: debug-applicants.png');
+
+    // HTMLを保存
+    const applicantsHtml = await page.content();
+    fs.writeFileSync('debug-applicants.html', applicantsHtml);
+    console.log('   HTML保存: debug-applicants.html');
+
+    // 応募者データを探す
+    console.log('\n6. 応募者データを抽出中...');
+
+    const applicantsData = await page.evaluate(() => {
+      // 応募者数を探す
+      const text = document.body.innerText;
+      const countMatch = text.match(/([0-9]+)\s*件/);
+
+      // 応募者リストを探す
+      const list = document.querySelectorAll('.applicant-item, .message-item, tr.applicant');
+
+      return {
+        totalText: countMatch ? countMatch[0] : null,
+        listCount: list.length,
+        pageText: text.substring(0, 1000)
+      };
+    });
+
+    if (applicantsData.totalText) {
+      console.log(`   応募件数表示: ${applicantsData.totalText}`);
     }
+    console.log(`   リストアイテム数: ${applicantsData.listCount}`);
 
     // デバッグモードの場合は待機
     if (isDebug) {
-      console.log('\n[デバッグモード] ブラウザを30秒間表示します...');
-      await page.waitForTimeout(30000);
+      console.log('\n[デバッグモード] ブラウザを60秒間表示します...');
+      await page.waitForTimeout(60000);
     }
 
     console.log('\n=== テスト完了 ===');

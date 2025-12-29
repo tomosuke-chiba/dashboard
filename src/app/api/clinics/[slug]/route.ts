@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
-// 特定クライアントのデータを取得
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
+  const { searchParams } = new URL(request.url);
+  const month = searchParams.get('month'); // Format: YYYY-MM
+
   const supabase = getSupabaseAdmin();
 
   if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database not configured' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }
 
   try {
@@ -25,75 +24,63 @@ export async function GET(
       .single();
 
     if (clinicError || !clinic) {
-      return NextResponse.json(
-        { error: 'Clinic not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Clinic not found' }, { status: 404 });
     }
 
-    // 最新のメトリクスを取得
-    const { data: latestMetrics } = await supabase
+    // 月別フィルタリング用の日付範囲を計算
+    let startDate: string | undefined;
+    let endDate: string | undefined;
+
+    if (month) {
+      const [year, monthNum] = month.split('-').map(Number);
+      startDate = `${year}-${String(monthNum).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, monthNum, 0).getDate();
+      endDate = `${year}-${String(monthNum).padStart(2, '0')}-${lastDay}`;
+    }
+
+    // 日別メトリクスを取得（日付降順 = 最新が上）
+    let query = supabase
       .from('metrics')
-      .select('pv_count, application_count, recorded_at')
-      .eq('clinic_id', clinic.id)
-      .order('recorded_at', { ascending: false })
-      .limit(1)
-      .single();
+      .select('*')
+      .eq('clinic_id', clinic.id);
 
-    // 過去1年分の履歴を取得（日別に集計）
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    if (startDate && endDate) {
+      query = query.gte('date', startDate).lte('date', endDate);
+    }
 
-    const { data: history } = await supabase
+    const { data: metrics } = await query.order('date', { ascending: true });
+
+    // 選択月の合計を計算
+    const summary = (metrics || []).reduce(
+      (acc, m) => ({
+        totalDisplayCount: acc.totalDisplayCount + (m.display_count || 0),
+        totalViewCount: acc.totalViewCount + (m.view_count || 0),
+        totalRedirectCount: acc.totalRedirectCount + (m.redirect_count || 0),
+        totalApplicationCount: acc.totalApplicationCount + (m.application_count || 0),
+      }),
+      { totalDisplayCount: 0, totalViewCount: 0, totalRedirectCount: 0, totalApplicationCount: 0 }
+    );
+
+    // 利用可能な月のリストを取得
+    const { data: allDates } = await supabase
       .from('metrics')
-      .select('pv_count, application_count, recorded_at')
+      .select('date')
       .eq('clinic_id', clinic.id)
-      .gte('recorded_at', oneYearAgo.toISOString())
-      .order('recorded_at', { ascending: true });
+      .order('date', { ascending: false });
 
-    // 日別に集計（1日の最後のデータを使用）
-    const dailyHistory = aggregateDailyMetrics(history || []);
+    const availableMonths = [...new Set(
+      (allDates || []).map(d => d.date.substring(0, 7))
+    )];
 
     return NextResponse.json({
-      clinic: {
-        id: clinic.id,
-        name: clinic.name,
-        slug: clinic.slug,
-      },
-      currentMetrics: latestMetrics || {
-        pv_count: 0,
-        application_count: 0,
-        recorded_at: null,
-      },
-      history: dailyHistory,
+      clinic,
+      metrics: metrics || [],
+      summary,
+      availableMonths,
+      currentMonth: month || availableMonths[0] || null,
     });
   } catch (error) {
     console.error('Error fetching clinic data:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-interface MetricsRecord {
-  pv_count: number;
-  application_count: number;
-  recorded_at: string;
-}
-
-function aggregateDailyMetrics(metrics: MetricsRecord[]) {
-  const dailyMap = new Map<string, MetricsRecord>();
-
-  for (const metric of metrics) {
-    const date = metric.recorded_at.split('T')[0];
-    // 同じ日の最後のデータで上書き
-    dailyMap.set(date, metric);
-  }
-
-  return Array.from(dailyMap.entries()).map(([date, metric]) => ({
-    date,
-    pv: metric.pv_count,
-    applications: metric.application_count,
-  }));
 }

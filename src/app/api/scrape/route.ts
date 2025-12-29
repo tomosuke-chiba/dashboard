@@ -4,9 +4,7 @@ import { scrapeGuppy } from '@/lib/scraper';
 import { sendDiscordNotification } from '@/lib/discord';
 import { Clinic } from '@/types';
 
-// Cronジョブまたは手動トリガーでスクレイピングを実行
 export async function POST(request: NextRequest) {
-  // 認証チェック（CRON_SECRETが設定されている場合のみ）
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -17,47 +15,35 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabaseAdmin();
 
   if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database not configured', results: [] },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }
 
   try {
-    // 全クライアントを取得
     const { data: clinics, error: clinicsError } = await supabase
       .from('clinics')
       .select('*');
 
-    if (clinicsError) {
-      throw clinicsError;
-    }
+    if (clinicsError) throw clinicsError;
 
     const results = [];
 
     for (const clinic of (clinics || []) as Clinic[]) {
-      // GUPPYのログイン情報がない場合はスキップ
       if (!clinic.guppy_login_id || !clinic.guppy_password) {
-        results.push({
-          clinic: clinic.name,
-          success: false,
-          error: 'GUPPY credentials not configured',
-        });
+        results.push({ clinic: clinic.name, success: false, error: 'No credentials' });
         continue;
       }
 
-      // 前回の応募数を取得
+      // 前回の応募数合計を取得
       const { data: prevMetrics } = await supabase
         .from('metrics')
         .select('application_count')
-        .eq('clinic_id', clinic.id)
-        .order('recorded_at', { ascending: false })
-        .limit(1)
-        .single();
+        .eq('clinic_id', clinic.id);
 
-      const prevApplicationCount = prevMetrics?.application_count || 0;
+      const prevTotalApplications = (prevMetrics || []).reduce(
+        (sum, m) => sum + (m.application_count || 0), 0
+      );
 
-      // GUPPYからデータをスクレイピング
+      // スクレイピング実行
       const scrapeResult = await scrapeGuppy(
         clinic.id,
         clinic.name,
@@ -66,21 +52,33 @@ export async function POST(request: NextRequest) {
       );
 
       if (scrapeResult) {
-        // メトリクスをデータベースに保存
-        const { error: insertError } = await supabase.from('metrics').insert({
-          clinic_id: clinic.id,
-          pv_count: scrapeResult.totalPV,
-          application_count: scrapeResult.totalApplications,
-          recorded_at: new Date().toISOString(),
-        });
+        // 日別データをUPSERT
+        for (const log of scrapeResult.accessLogs) {
+          const { error: upsertError } = await supabase
+            .from('metrics')
+            .upsert({
+              clinic_id: clinic.id,
+              date: log.date,
+              display_count: log.displayCount,
+              view_count: log.viewCount,
+              redirect_count: log.redirectCount,
+              application_count: log.applicationCount,
+            }, {
+              onConflict: 'clinic_id,date'
+            });
 
-        if (insertError) {
-          console.error(`Error inserting metrics for ${clinic.name}:`, insertError);
+          if (upsertError) {
+            console.error(`Error upserting metrics for ${clinic.name} on ${log.date}:`, upsertError);
+          }
         }
 
-        // 新規応募があればDiscordに通知
-        if (scrapeResult.totalApplications > prevApplicationCount) {
-          const newApplications = scrapeResult.totalApplications - prevApplicationCount;
+        // 新規応募があればDiscord通知
+        const newTotalApplications = scrapeResult.accessLogs.reduce(
+          (sum, log) => sum + log.applicationCount, 0
+        );
+
+        if (newTotalApplications > prevTotalApplications) {
+          const newApplications = newTotalApplications - prevTotalApplications;
           await sendDiscordNotification({
             clinicName: clinic.name,
             message: `${clinic.name}に新規応募が${newApplications}件ありました！`,
@@ -89,16 +87,11 @@ export async function POST(request: NextRequest) {
 
         results.push({
           clinic: clinic.name,
-          pv: scrapeResult.totalPV,
-          applications: scrapeResult.totalApplications,
+          daysProcessed: scrapeResult.accessLogs.length,
           success: true,
         });
       } else {
-        results.push({
-          clinic: clinic.name,
-          success: false,
-          error: 'Scraping failed',
-        });
+        results.push({ clinic: clinic.name, success: false, error: 'Scraping failed' });
       }
     }
 
@@ -109,14 +102,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Scrape API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// ヘルスチェック用
 export async function GET() {
   return NextResponse.json({ status: 'ok' });
 }
