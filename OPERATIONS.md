@@ -82,8 +82,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | a4165a5 test: add OPERATIONS.md |
-| Updated | 2025-12-30 16:16:57 |
+| Last Commit | f62a7f1 feat: Phase1実装 - 職種別対応、スカウトメール、Bitly連携、閲覧率アラート |
+| Updated | 2025-12-30 16:17:30 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
