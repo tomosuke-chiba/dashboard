@@ -96,8 +96,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | be31528 feat: Phase1実装 - 職種別対応、スカウトメール、Bitly連携、閲覧率アラート |
-| Updated | 2025-12-30 22:42:31 |
+| Last Commit | 341f2a6 12/30 done |
+| Updated | 2025-12-30 22:51:23 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
