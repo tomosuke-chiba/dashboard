@@ -39,27 +39,58 @@ export async function GET(
     }
 
     // 日別メトリクスを取得（日付降順 = 最新が上）
-    let query = supabase
+    let metricsQuery = supabase
       .from('metrics')
       .select('*')
       .eq('clinic_id', clinic.id);
 
     if (startDate && endDate) {
-      query = query.gte('date', startDate).lte('date', endDate);
+      metricsQuery = metricsQuery.gte('date', startDate).lte('date', endDate);
     }
 
-    const { data: metrics } = await query.order('date', { ascending: true });
+    const { data: metrics } = await metricsQuery.order('date', { ascending: true });
+
+    // スカウトメールデータを取得
+    let scoutQuery = supabase
+      .from('scout_messages')
+      .select('*')
+      .eq('clinic_id', clinic.id);
+
+    if (startDate && endDate) {
+      scoutQuery = scoutQuery.gte('date', startDate).lte('date', endDate);
+    }
+
+    const { data: scoutMessages } = await scoutQuery.order('date', { ascending: true });
+
+    // Bitlyクリックデータを取得
+    let bitlyQuery = supabase
+      .from('bitly_clicks')
+      .select('*')
+      .eq('clinic_id', clinic.id);
+
+    if (startDate && endDate) {
+      bitlyQuery = bitlyQuery.gte('date', startDate).lte('date', endDate);
+    }
+
+    const { data: bitlyClicks } = await bitlyQuery.order('date', { ascending: true });
 
     // 選択月の合計を計算
-    const summary = (metrics || []).reduce(
-      (acc, m) => ({
-        totalDisplayCount: acc.totalDisplayCount + (m.display_count || 0),
-        totalViewCount: acc.totalViewCount + (m.view_count || 0),
-        totalRedirectCount: acc.totalRedirectCount + (m.redirect_count || 0),
-        totalApplicationCount: acc.totalApplicationCount + (m.application_count || 0),
-      }),
-      { totalDisplayCount: 0, totalViewCount: 0, totalRedirectCount: 0, totalApplicationCount: 0 }
-    );
+    const totalDisplayCount = (metrics || []).reduce((sum, m) => sum + (m.display_count || 0), 0);
+    const totalViewCount = (metrics || []).reduce((sum, m) => sum + (m.view_count || 0), 0);
+    const totalRedirectCount = (metrics || []).reduce((sum, m) => sum + (m.redirect_count || 0), 0);
+    const totalApplicationCount = (metrics || []).reduce((sum, m) => sum + (m.application_count || 0), 0);
+
+    const viewRate = totalDisplayCount > 0 ? totalViewCount / totalDisplayCount : 0;
+    const applicationRate = totalViewCount > 0 ? totalApplicationCount / totalViewCount : 0;
+
+    const summary = {
+      totalDisplayCount,
+      totalViewCount,
+      totalRedirectCount,
+      totalApplicationCount,
+      viewRate,
+      applicationRate,
+    };
 
     // 利用可能な月のリストを取得
     const { data: allDates } = await supabase
@@ -76,6 +107,8 @@ export async function GET(
       clinic,
       metrics: metrics || [],
       summary,
+      scoutMessages: scoutMessages || [],
+      bitlyClicks: bitlyClicks || [],
       availableMonths,
       currentMonth: month || availableMonths[0] || null,
     });

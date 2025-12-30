@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { DailyMetrics } from '@/types';
+import { DailyMetrics, ScoutMessage, BitlyClick, JobType, JOB_TYPE_LABELS, PHASE1_JOB_TYPES } from '@/types';
 
 interface ClinicData {
   clinic: { id: string; name: string; slug: string };
@@ -12,10 +12,16 @@ interface ClinicData {
     totalViewCount: number;
     totalRedirectCount: number;
     totalApplicationCount: number;
+    viewRate: number;
+    applicationRate: number;
   };
+  scoutMessages?: ScoutMessage[];
+  bitlyClicks?: BitlyClick[];
   availableMonths: string[];
   currentMonth: string | null;
 }
+
+type TabType = 'all' | JobType;
 
 export default function GuppyPage() {
   const params = useParams();
@@ -23,6 +29,7 @@ export default function GuppyPage() {
 
   const [data, setData] = useState<ClinicData | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<TabType>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,6 +71,39 @@ export default function GuppyPage() {
     const [year, month] = monthStr.split('-');
     return `${year}年${parseInt(month)}月`;
   };
+
+  // 閲覧率の計算とアラート判定
+  const calculateViewRate = (displayCount: number, viewCount: number) => {
+    if (displayCount === 0) return 0;
+    return viewCount / displayCount;
+  };
+
+  const isViewRateAlert = (displayCount: number, viewCount: number) => {
+    return calculateViewRate(displayCount, viewCount) > 0.3;
+  };
+
+  // スカウトメールのサマリー計算
+  const scoutSummary = data.scoutMessages?.reduce(
+    (acc, msg) => ({
+      sent: acc.sent + msg.sent_count,
+      reply: acc.reply + msg.reply_count,
+    }),
+    { sent: 0, reply: 0 }
+  ) || { sent: 0, reply: 0 };
+
+  const scoutReplyRate = scoutSummary.sent > 0
+    ? ((scoutSummary.reply / scoutSummary.sent) * 100).toFixed(1)
+    : '0.0';
+
+  // Bitlyクリック数のサマリー
+  const totalBitlyClicks = data.bitlyClicks?.reduce(
+    (sum, click) => sum + click.click_count, 0
+  ) || 0;
+
+  // 職種別フィルタリング（将来の拡張用）
+  const filteredMetrics = selectedTab === 'all'
+    ? data.metrics
+    : data.metrics.filter(m => m.job_type === selectedTab);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -110,12 +150,75 @@ export default function GuppyPage() {
           </div>
         </div>
 
+        {/* 職種タブ */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedTab('all')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedTab === 'all'
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              合計
+            </button>
+            {PHASE1_JOB_TYPES.map((jobType) => (
+              <button
+                key={jobType}
+                onClick={() => setSelectedTab(jobType)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedTab === jobType
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                {JOB_TYPE_LABELS[jobType]}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">※ 職種別データは今後対応予定です</p>
+        </div>
+
         {/* サマリーカード */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <SummaryCard title="表示数" value={data.summary.totalDisplayCount} color="blue" />
-          <SummaryCard title="閲覧数" value={data.summary.totalViewCount} color="green" />
+          <SummaryCard
+            title="閲覧数"
+            value={data.summary.totalViewCount}
+            color="green"
+            subValue={`閲覧率: ${(calculateViewRate(data.summary.totalDisplayCount, data.summary.totalViewCount) * 100).toFixed(1)}%`}
+            alert={isViewRateAlert(data.summary.totalDisplayCount, data.summary.totalViewCount)}
+          />
           <SummaryCard title="自社サイト誘導" value={data.summary.totalRedirectCount} color="purple" />
           <SummaryCard title="応募数" value={data.summary.totalApplicationCount} color="orange" />
+        </div>
+
+        {/* スカウトメールセクション */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-800">スカウトメール</h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-indigo-50 rounded-lg p-4">
+                <p className="text-sm text-indigo-700 opacity-80">送信数</p>
+                <p className="text-2xl font-bold text-indigo-700 mt-1">{scoutSummary.sent.toLocaleString()}</p>
+              </div>
+              <div className="bg-teal-50 rounded-lg p-4">
+                <p className="text-sm text-teal-700 opacity-80">返信数</p>
+                <p className="text-2xl font-bold text-teal-700 mt-1">{scoutSummary.reply.toLocaleString()}</p>
+              </div>
+              <div className="bg-cyan-50 rounded-lg p-4">
+                <p className="text-sm text-cyan-700 opacity-80">返信率</p>
+                <p className="text-2xl font-bold text-cyan-700 mt-1">{scoutReplyRate}%</p>
+              </div>
+              <div className="bg-pink-50 rounded-lg p-4">
+                <p className="text-sm text-pink-700 opacity-80">Bitlyクリック数</p>
+                <p className="text-2xl font-bold text-pink-700 mt-1">{totalBitlyClicks.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 日別データテーブル */}
@@ -133,6 +236,7 @@ export default function GuppyPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">日付</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">表示数</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">閲覧数</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">閲覧率</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">自社サイト誘導</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">応募数</th>
                 </tr>
@@ -140,37 +244,46 @@ export default function GuppyPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       読み込み中...
                     </td>
                   </tr>
-                ) : data.metrics.length > 0 ? (
-                  data.metrics.map((metric) => (
-                    <tr key={metric.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {metric.date}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {metric.display_count.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {metric.view_count.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {metric.redirect_count.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
-                        {metric.application_count > 0 ? (
-                          <span className="text-orange-600">{metric.application_count}</span>
-                        ) : (
-                          metric.application_count
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                ) : filteredMetrics.length > 0 ? (
+                  filteredMetrics.map((metric) => {
+                    const viewRate = calculateViewRate(metric.display_count, metric.view_count);
+                    const isAlert = isViewRateAlert(metric.display_count, metric.view_count);
+
+                    return (
+                      <tr key={metric.id} className={`hover:bg-gray-50 ${isAlert ? 'bg-red-50' : ''}`}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {metric.date}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                          {metric.display_count.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                          {metric.view_count.toLocaleString()}
+                        </td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm text-right ${isAlert ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
+                          {(viewRate * 100).toFixed(1)}%
+                          {isAlert && <span className="ml-1" title="不正アクセスの可能性があります">⚠️</span>}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                          {metric.redirect_count.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-semibold">
+                          {metric.application_count > 0 ? (
+                            <span className="text-orange-600">{metric.application_count}</span>
+                          ) : (
+                            metric.application_count
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       データがありません
                     </td>
                   </tr>
@@ -190,7 +303,19 @@ export default function GuppyPage() {
   );
 }
 
-function SummaryCard({ title, value, color }: { title: string; value: number; color: string }) {
+function SummaryCard({
+  title,
+  value,
+  color,
+  subValue,
+  alert = false
+}: {
+  title: string;
+  value: number;
+  color: string;
+  subValue?: string;
+  alert?: boolean;
+}) {
   const colorClasses: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-700',
     green: 'bg-green-50 text-green-700',
@@ -198,10 +323,18 @@ function SummaryCard({ title, value, color }: { title: string; value: number; co
     orange: 'bg-orange-50 text-orange-700',
   };
 
+  const alertClasses = alert ? 'ring-2 ring-red-500 bg-red-50 text-red-700' : colorClasses[color];
+
   return (
-    <div className={`rounded-lg p-4 ${colorClasses[color]}`}>
+    <div className={`rounded-lg p-4 ${alertClasses}`}>
       <p className="text-sm opacity-80">{title}</p>
       <p className="text-2xl font-bold mt-1">{value.toLocaleString()}</p>
+      {subValue && (
+        <p className={`text-xs mt-1 ${alert ? 'text-red-600 font-semibold' : 'opacity-70'}`}>
+          {subValue}
+          {alert && ' ⚠️'}
+        </p>
+      )}
     </div>
   );
 }

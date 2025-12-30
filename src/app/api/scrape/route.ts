@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { scrapeGuppy } from '@/lib/scraper';
-import { sendDiscordNotification } from '@/lib/discord';
+import { scrapeGuppy, scrapeGuppyScoutMessages } from '@/lib/scraper';
+import { sendDiscordNotification, sendViewRateAlert, isViewRateAbnormal, calculateViewRate } from '@/lib/discord';
+import { fetchAllClinicsBitlyClicks } from '@/lib/bitly';
 import { Clinic } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     if (clinicsError) throw clinicsError;
 
     const results = [];
+    const viewRateAlerts = [];
 
     for (const clinic of (clinics || []) as Clinic[]) {
       if (!clinic.guppy_login_id || !clinic.guppy_password) {
@@ -59,16 +61,31 @@ export async function POST(request: NextRequest) {
             .upsert({
               clinic_id: clinic.id,
               date: log.date,
+              source: 'guppy',
+              job_type: null, // 合計値
               display_count: log.displayCount,
               view_count: log.viewCount,
               redirect_count: log.redirectCount,
               application_count: log.applicationCount,
             }, {
-              onConflict: 'clinic_id,date'
+              onConflict: 'clinic_id,date,source,job_type'
             });
 
           if (upsertError) {
             console.error(`Error upserting metrics for ${clinic.name} on ${log.date}:`, upsertError);
+          }
+
+          // 閲覧率30%超チェック
+          if (isViewRateAbnormal(log.displayCount, log.viewCount)) {
+            const viewRate = calculateViewRate(log.displayCount, log.viewCount);
+            viewRateAlerts.push({
+              clinicId: clinic.id,
+              clinicName: clinic.name,
+              date: log.date,
+              viewRate,
+              displayCount: log.displayCount,
+              viewCount: log.viewCount,
+            });
           }
         }
 
@@ -85,9 +102,37 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        // スカウトメールデータ取得
+        const scoutResult = await scrapeGuppyScoutMessages(
+          clinic.id,
+          clinic.name,
+          clinic.guppy_login_id,
+          clinic.guppy_password
+        );
+
+        if (scoutResult) {
+          const today = new Date().toISOString().split('T')[0];
+          const { error: scoutUpsertError } = await supabase
+            .from('scout_messages')
+            .upsert({
+              clinic_id: clinic.id,
+              date: today,
+              source: 'guppy',
+              sent_count: scoutResult.sentCount,
+              reply_count: scoutResult.replyCount,
+            }, {
+              onConflict: 'clinic_id,date,source'
+            });
+
+          if (scoutUpsertError) {
+            console.error(`Error upserting scout messages for ${clinic.name}:`, scoutUpsertError);
+          }
+        }
+
         results.push({
           clinic: clinic.name,
           daysProcessed: scrapeResult.accessLogs.length,
+          scoutData: scoutResult ? { sent: scoutResult.sentCount, reply: scoutResult.replyCount } : null,
           success: true,
         });
       } else {
@@ -95,10 +140,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 閲覧率アラートを送信
+    for (const alert of viewRateAlerts) {
+      await sendViewRateAlert(alert);
+    }
+
+    // Bitlyクリック数を取得
+    const bitlyResults = await fetchAllClinicsBitlyClicks();
+
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
       results,
+      viewRateAlerts: viewRateAlerts.length,
+      bitlyResults,
     });
   } catch (error) {
     console.error('Scrape API error:', error);

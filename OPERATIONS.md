@@ -11,18 +11,36 @@
 歯科医院向け求人媒体（GUPPY/ジョブメドレー/Quacareer）のアクセスデータを収集・表示するダッシュボード
 
 ### 直近やったこと
-- GUPPYスクレイピング実装完了（過去6ヶ月分対応）
-- 17クライアントのデータ登録
-- ダッシュボードUI完成（月別切り替え機能）
-- Discord通知設定完了
+- Phase 1実装完了（2025-12-30）
+  - 職種別データ対応（Dr/DH/DA）のDB設計・スクレイパー準備
+  - スカウトメール取得機能（送信数・返信数）
+  - 閲覧率30%超アラート（Discord通知）
+  - Bitly API連携（クリック数取得）
+  - ダッシュボードUI更新（職種タブ・スカウトセクション追加）
+  - Cron設定（1日4回: 0時/6時/12時/18時）
 
 ### 次にやること
-- [ ] Phase 6: Vercel Cron設定（10分間隔の自動更新）
-- [ ] Phase 7: Vercelデプロイ
-- [ ] ジョブメドレー/Quacareerスクレイピング実装
+- [ ] DBマイグレーション実行（`supabase/migrations/001_add_job_type_and_new_tables.sql`）
+- [ ] 環境変数追加: `BITLY_ACCESS_TOKEN`
+- [ ] 各クリニックのBitly URL登録（clinics.bitly_url）
+- [ ] GUPPY管理画面の職種タブセレクタ確認・調整
+- [ ] Vercelデプロイ
+- [ ] Phase 2: ジョブメドレー対応
 
 ### 詰まっていること
-なし
+- 職種タブのセレクタ（`scraper.ts`の`selectJobTypeTab`関数）はGUPPY管理画面の実際のHTML構造確認が必要
+
+### 次回の最初に実行するコマンド
+```bash
+# 1. Supabase SQL Editorでマイグレーション実行
+# ファイル: supabase/migrations/001_add_job_type_and_new_tables.sql
+
+# 2. 環境変数追加（.env.local）
+# BITLY_ACCESS_TOKEN=your-bitly-token
+
+# 3. 開発サーバー起動
+npm run dev
+```
 
 ### 関連コマンド
 ```bash
@@ -61,11 +79,11 @@ npm run dev
 <!-- AUTO-UPDATED-START -->
 | Key | Value |
 |-----|-------|
-| Node | not installed |
-| npm | not installed |
+| Node | v25.2.1 |
+| npm | 11.6.2 |
 | Branch | main |
-| Last Commit | 64f82bc Initial commit |
-| Updated | 2025-12-29 21:16:31 |
+| Last Commit | a4165a5 test: add OPERATIONS.md |
+| Updated | 2025-12-30 16:16:57 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
@@ -83,6 +101,7 @@ npm run dev
 | ADMIN_PASSWORD | 任意の値を設定 | Yes |
 | CRON_SECRET | 任意の値を設定（API認証用） | Yes |
 | NEXT_PUBLIC_BASE_URL | デプロイ後の本番URL or http://localhost:3000 | Yes |
+| BITLY_ACCESS_TOKEN | Bitly Settings → API → Access Token | Yes (Phase1) |
 
 ---
 
@@ -133,13 +152,16 @@ curl -X POST http://localhost:3000/api/scrape \
 - Project URL: Supabase Dashboardで確認
 
 ### テーブル構成
-- `clinics`: クライアント（歯科医院）情報
-- `metrics`: 日別アクセスデータ
+- `clinics`: クライアント（歯科医院）情報 + bitly_url
+- `metrics`: 日別アクセスデータ + job_type
+- `scout_messages`: スカウトメールデータ（送信数・返信数・開封数）
+- `bitly_clicks`: Bitlyクリックデータ
 
 ### スキーマ適用
 ```bash
 # Supabase Dashboard → SQL Editor で実行
-# ファイル: supabase/schema.sql
+# 初期スキーマ: supabase/schema.sql
+# マイグレーション: supabase/migrations/001_add_job_type_and_new_tables.sql
 ```
 
 ### シードデータ
@@ -201,6 +223,12 @@ kill -9 <PID>
 **原因**: Webhook URLが未設定 or 無効
 **対処**: .env.local の `DISCORD_WEBHOOK_URL` を確認
 
+### Bitlyクリック数が取得できない
+**原因**: BITLY_ACCESS_TOKEN未設定 or clinics.bitly_url未登録
+**対処**:
+1. .env.local に `BITLY_ACCESS_TOKEN` を設定
+2. clinicsテーブルの `bitly_url` にBitly短縮URLを登録
+
 ---
 
 ## Project Structure
@@ -210,19 +238,20 @@ src/
 ├── app/                    # Next.js App Router
 │   ├── api/
 │   │   ├── clinics/        # クリニックAPI
-│   │   └── scrape/         # スクレイピングAPI
+│   │   └── scrape/         # スクレイピングAPI（閲覧率アラート・Bitly連携含む）
 │   └── clinic/
 │       ├── page.tsx        # クリニック一覧（HOME）
 │       └── [slug]/
-│           ├── guppy/      # GUPPYダッシュボード
+│           ├── guppy/      # GUPPYダッシュボード（職種タブ・スカウトセクション）
 │           ├── job-medley/ # ジョブメドレー（Coming Soon）
 │           └── quacareer/  # Quacareer（Coming Soon）
 ├── lib/
 │   ├── supabase.ts         # Supabaseクライアント
-│   ├── scraper.ts          # GUPPYスクレイパー
-│   └── discord.ts          # Discord通知
+│   ├── scraper.ts          # GUPPYスクレイパー（職種別・スカウト取得）
+│   ├── discord.ts          # Discord通知（応募通知・閲覧率アラート）
+│   └── bitly.ts            # Bitly APIクライアント
 └── types/
-    └── index.ts            # 型定義
+    └── index.ts            # 型定義（職種・スカウト・Bitly型追加）
 
 scripts/
 ├── import-clinics.ts       # CSVインポート
@@ -230,11 +259,20 @@ scripts/
 └── update_operations.sh    # OPERATIONS.md自動更新
 
 supabase/
-├── schema.sql              # DBスキーマ
-└── seed.sql                # シードデータ
+├── schema.sql              # DBスキーマ（最新版）
+└── migrations/
+    └── 001_add_job_type_and_new_tables.sql  # Phase1マイグレーション
 
 data/
 └── clinics-guppy-pw.csv    # クリニック情報CSV
+
+docs/
+├── requirements.md         # 全体要件定義書
+├── requirements-guppy.md   # GUPPY詳細要件
+├── requirements-jobmedley.md   # ジョブメドレー詳細要件
+└── requirements-quacareer.md   # クオキャリア詳細要件
+
+vercel.json                 # Cron設定（1日4回）
 ```
 
 ---
@@ -246,3 +284,5 @@ data/
 | 2024-12-29 | OPERATIONS.md 作成 |
 | 2024-12-29 | Phase 0-5 完了（スクレイピング、UI、Discord通知） |
 | 2024-12-29 | 17クライアント、6ヶ月分データ取得完了 |
+| 2025-12-30 | Phase 1完了（職種別、スカウト、Bitly、閲覧率アラート、Cron設定） |
+| 2025-12-30 | 要件定義書作成（requirements.md、媒体別詳細要件） |
