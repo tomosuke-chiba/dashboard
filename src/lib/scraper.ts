@@ -5,18 +5,25 @@ const GUPPY_LOGIN_URL = 'https://www.guppy.jp/service/login';
 const GUPPY_ACCESS_LOG_URL = 'https://www.guppy.jp/service/access_logs';
 const GUPPY_MESSAGE_THREAD_URL = 'https://www.guppy.jp/service/message_thread';
 
-// GUPPYでの職種識別子（実際のセレクタは要調査）
-const GUPPY_JOB_TYPE_MAP: Record<JobType, string> = {
-  dr: 'dds',      // 歯科医師
-  dh: 'dh',       // 歯科衛生士
-  da: 'da',       // 歯科助手
-  reception: 'reception',
-  technician: 'technician',
-  dietitian: 'dietitian',
-  nursery: 'nursery',
-  kindergarten: 'kindergarten',
-  medical_clerk: 'medical_clerk',
-};
+// 求人情報の型定義
+interface JobListing {
+  id: string;
+  name: string;
+  jobType: JobType | null;
+}
+
+// 求人名から職種を判定するキーワードマップ
+const JOB_TYPE_KEYWORDS: { keywords: string[]; jobType: JobType }[] = [
+  { keywords: ['歯科医師', '医師', 'ドクター', 'Dr'], jobType: 'dr' },
+  { keywords: ['歯科衛生士', '衛生士', 'DH'], jobType: 'dh' },
+  { keywords: ['歯科助手', '助手', 'DA', 'アシスタント'], jobType: 'da' },
+  { keywords: ['受付', 'レセプション'], jobType: 'reception' },
+  { keywords: ['歯科技工士', '技工士'], jobType: 'technician' },
+  { keywords: ['管理栄養士', '栄養士'], jobType: 'dietitian' },
+  { keywords: ['保育士', '保育'], jobType: 'nursery' },
+  { keywords: ['幼稚園教諭', '幼稚園'], jobType: 'kindergarten' },
+  { keywords: ['医療事務', '事務'], jobType: 'medical_clerk' },
+];
 
 /**
  * 過去N月分の年月リストを生成
@@ -73,47 +80,59 @@ async function extractTableData(page: Page): Promise<AccessLogEntry[]> {
 }
 
 /**
- * 職種タブを選択（GUPPYの実際のUI構造に依存）
- * 注意: 実際のセレクタは管理画面の調査後に更新が必要
+ * 求人名から職種を判定する
  */
-async function selectJobTypeTab(page: Page, jobType: JobType): Promise<boolean> {
-  const guppyJobType = GUPPY_JOB_TYPE_MAP[jobType];
-
-  try {
-    // 職種タブのセレクタ（実際の構造に合わせて調整が必要）
-    // 想定されるパターン:
-    // 1. タブボタン: [data-job-type="dds"], .job-type-tab[data-type="dds"]
-    // 2. セレクトボックス: select[name="job_type"] option[value="dds"]
-    // 3. リンク: a[href*="job_type=dds"]
-
-    // パターン1: タブボタン
-    const tabSelector = `[data-job-type="${guppyJobType}"], .job-type-tab[data-type="${guppyJobType}"]`;
-    const tabExists = await page.$(tabSelector);
-    if (tabExists) {
-      await page.click(tabSelector);
-      await page.waitForTimeout(1000);
-      return true;
+function detectJobTypeFromName(jobName: string): JobType | null {
+  for (const { keywords, jobType } of JOB_TYPE_KEYWORDS) {
+    for (const keyword of keywords) {
+      if (jobName.includes(keyword)) {
+        return jobType;
+      }
     }
-
-    // パターン2: セレクトボックス
-    const selectExists = await page.$('select[name="job_type"]');
-    if (selectExists) {
-      await page.selectOption('select[name="job_type"]', guppyJobType);
-      await page.waitForTimeout(1000);
-      return true;
-    }
-
-    // パターン3: URLパラメータで切り替え
-    const currentUrl = page.url();
-    const urlWithJobType = currentUrl.includes('?')
-      ? `${currentUrl}&job_type=${guppyJobType}`
-      : `${currentUrl}?job_type=${guppyJobType}`;
-    await page.goto(urlWithJobType, { waitUntil: 'networkidle' });
-    return true;
-  } catch (error) {
-    console.error(`Failed to select job type ${jobType}:`, error);
-    return false;
   }
+  return null;
+}
+
+/**
+ * アクセスログページのドロップダウンから求人ID一覧を抽出
+ * ドロップダウンのテキスト例: "歯科衛生士（正社員）[1234567]"
+ * 正規表現 /\[(\d+)\]/ でIDを抽出
+ */
+async function extractJobListingsFromDropdown(page: Page): Promise<JobListing[]> {
+  return await page.evaluate(() => {
+    const select = document.querySelector('select') as HTMLSelectElement | null;
+    if (!select) return [];
+
+    const listings: { id: string; name: string; jobType: null }[] = [];
+    const options = select.querySelectorAll('option');
+
+    options.forEach((option) => {
+      const text = option.textContent?.trim() || '';
+      // [1234567] 形式のIDを抽出
+      const match = text.match(/\[(\d+)\]/);
+      if (match && match[1]) {
+        listings.push({
+          id: match[1],
+          name: text.replace(/\[\d+\]/, '').trim(), // ID部分を除いた求人名
+          jobType: null, // 後でdetectJobTypeFromNameで設定
+        });
+      }
+    });
+
+    return listings;
+  });
+}
+
+/**
+ * 求人ID一覧を取得し、職種を判定して返す
+ */
+async function getJobListingsWithJobType(page: Page): Promise<JobListing[]> {
+  const listings = await extractJobListingsFromDropdown(page);
+
+  return listings.map((listing) => ({
+    ...listing,
+    jobType: detectJobTypeFromName(listing.name),
+  }));
 }
 
 /**
@@ -193,14 +212,17 @@ export async function scrapeGuppy(
 }
 
 /**
- * GUPPYから職種別アクセスログを取得
+ * GUPPYから職種別アクセスログを取得（求人IDベース）
+ * 1. アクセスログページのドロップダウンから求人ID一覧を抽出
+ * 2. 各求人IDごとにアクセスログURLにアクセス
+ * 3. 求人名から職種を判定してデータを保存
  */
 export async function scrapeGuppyByJobType(
   clinicId: string,
   clinicName: string,
   loginId: string,
   password: string,
-  jobTypes: JobType[] = PHASE1_JOB_TYPES,
+  _jobTypes: JobType[] = PHASE1_JOB_TYPES, // 互換性のため残すが使用しない
   monthsBack: number = 6
 ): Promise<ScrapeResult | null> {
   let browser: Browser | null = null;
@@ -231,48 +253,125 @@ export async function scrapeGuppyByJobType(
     }
 
     const months = getMonthsToScrape(monthsBack);
-    const allAccessLogs: AccessLogEntry[] = [];
-    const jobTypeAccessLogs: JobTypeAccessLog[] = [];
 
-    // 各職種ごとにデータを取得
-    for (const jobType of jobTypes) {
-      const jobTypeLogs: AccessLogEntry[] = [];
+    // 最初の月のページにアクセスして求人ID一覧を取得
+    const firstMonth = months[0];
+    const firstMonthStr = String(firstMonth.month).padStart(2, '0');
+    const firstUrl = `${GUPPY_ACCESS_LOG_URL}/${firstMonth.year}-${firstMonthStr}`;
+    await page.goto(firstUrl, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
 
+    // ドロップダウンから求人ID一覧を取得
+    const jobListings = await getJobListingsWithJobType(page);
+    console.log(`[${clinicName}] 求人数: ${jobListings.length}件`);
+
+    if (jobListings.length === 0) {
+      console.log(`[${clinicName}] 求人が見つかりませんでした。合計データのみ取得します。`);
+      // 求人がない場合は従来の合計取得にフォールバック
+      const allAccessLogs: AccessLogEntry[] = [];
       for (const { year, month } of months) {
         const monthStr = String(month).padStart(2, '0');
         const url = `${GUPPY_ACCESS_LOG_URL}/${year}-${monthStr}`;
         await page.goto(url, { waitUntil: 'networkidle' });
         await page.waitForTimeout(500);
+        const monthLogs = await extractTableData(page);
+        allAccessLogs.push(...monthLogs);
+      }
 
-        // 職種タブを選択
-        await selectJobTypeTab(page, jobType);
+      const uniqueLogs = Array.from(
+        new Map(allAccessLogs.map(log => [log.date, log])).values()
+      );
+
+      return {
+        clinicId,
+        clinicName,
+        accessLogs: uniqueLogs,
+        scrapedAt: new Date(),
+      };
+    }
+
+    // 職種別にログを集計するためのマップ
+    const jobTypeLogsMap: Map<JobType, AccessLogEntry[]> = new Map();
+    const allAccessLogs: AccessLogEntry[] = [];
+
+    // 各求人IDごとにデータを取得
+    for (const listing of jobListings) {
+      console.log(`[${clinicName}] 求人: ${listing.name} (ID: ${listing.id}, 職種: ${listing.jobType || '不明'})`);
+
+      const jobLogs: AccessLogEntry[] = [];
+
+      for (const { year, month } of months) {
+        const monthStr = String(month).padStart(2, '0');
+        // 求人ID別のアクセスログURL: /service/access_logs/YYYY-MM/JOB_ID
+        const url = `${GUPPY_ACCESS_LOG_URL}/${year}-${monthStr}/${listing.id}`;
+        await page.goto(url, { waitUntil: 'networkidle' });
         await page.waitForTimeout(500);
 
         const monthLogs = await extractTableData(page);
-        console.log(`[${clinicName}] ${jobType} ${year}年${month}月: ${monthLogs.length}日分`);
-        jobTypeLogs.push(...monthLogs);
+        console.log(`  ${year}年${month}月: ${monthLogs.length}日分`);
+        jobLogs.push(...monthLogs);
       }
 
       // 重複を除去
-      const uniqueJobTypeLogs = Array.from(
-        new Map(jobTypeLogs.map(log => [log.date, log])).values()
+      const uniqueJobLogs = Array.from(
+        new Map(jobLogs.map(log => [log.date, log])).values()
       );
+
+      // 全体のログに追加
+      allAccessLogs.push(...uniqueJobLogs);
+
+      // 職種が判定できた場合、職種別にも集計
+      if (listing.jobType) {
+        const existingLogs = jobTypeLogsMap.get(listing.jobType) || [];
+        jobTypeLogsMap.set(listing.jobType, [...existingLogs, ...uniqueJobLogs]);
+      }
+    }
+
+    // 職種別ログを集計（同じ日付は合算）
+    const jobTypeAccessLogs: JobTypeAccessLog[] = [];
+    for (const [jobType, logs] of jobTypeLogsMap) {
+      // 同じ日付のデータを合算
+      const dateMap = new Map<string, AccessLogEntry>();
+      for (const log of logs) {
+        const existing = dateMap.get(log.date);
+        if (existing) {
+          dateMap.set(log.date, {
+            date: log.date,
+            displayCount: existing.displayCount + log.displayCount,
+            viewCount: existing.viewCount + log.viewCount,
+            redirectCount: existing.redirectCount + log.redirectCount,
+            applicationCount: existing.applicationCount + log.applicationCount,
+          });
+        } else {
+          dateMap.set(log.date, { ...log });
+        }
+      }
 
       jobTypeAccessLogs.push({
         jobType,
-        accessLogs: uniqueJobTypeLogs,
+        accessLogs: Array.from(dateMap.values()),
       });
-
-      // 合計にも追加
-      allAccessLogs.push(...uniqueJobTypeLogs);
     }
 
-    // 全体の重複を除去（合計用）
-    const uniqueAllLogs = Array.from(
-      new Map(allAccessLogs.map(log => [log.date, log])).values()
-    );
+    // 全体も同様に日付で合算
+    const allDateMap = new Map<string, AccessLogEntry>();
+    for (const log of allAccessLogs) {
+      const existing = allDateMap.get(log.date);
+      if (existing) {
+        allDateMap.set(log.date, {
+          date: log.date,
+          displayCount: existing.displayCount + log.displayCount,
+          viewCount: existing.viewCount + log.viewCount,
+          redirectCount: existing.redirectCount + log.redirectCount,
+          applicationCount: existing.applicationCount + log.applicationCount,
+        });
+      } else {
+        allDateMap.set(log.date, { ...log });
+      }
+    }
 
-    console.log(`[${clinicName}] 職種別取得完了: ${jobTypes.length}職種`);
+    const uniqueAllLogs = Array.from(allDateMap.values());
+    console.log(`[${clinicName}] 職種別取得完了: ${jobTypeAccessLogs.length}職種, ${uniqueAllLogs.length}日分`);
 
     return {
       clinicId,
@@ -291,15 +390,67 @@ export async function scrapeGuppyByJobType(
   }
 }
 
+// スカウトメモの職種マッピング
+const SCOUT_JOB_TYPE_MAP: Record<string, JobType> = {
+  'DH': 'dh',
+  'DR': 'dr',
+  'DA': 'da',
+  '歯科衛生士': 'dh',
+  '歯科医師': 'dr',
+  '歯科助手': 'da',
+};
+
+interface ScoutMemoEntry {
+  date: string;       // YYYY-MM-DD形式
+  jobType: JobType | null;
+  memo: string;
+}
+
+export interface DailyScoutData {
+  date: string;
+  sentCount: number;
+  replyCount: number; // 現状は0固定（返信追跡は別途実装が必要）
+}
+
 /**
- * スカウトメールの送信数を取得
+ * スカウトメモから日付と職種を抽出
+ * 形式: "1226 DH スカウト" → { date: "2024-12-26", jobType: "dh" }
+ */
+function parseScoutMemo(memo: string, createdDate: string): ScoutMemoEntry | null {
+  // createdDateは "2025.12.26" 形式
+  const year = createdDate.split('.')[0];
+
+  // メモの先頭4桁が日付 (MMDD形式)
+  const dateMatch = memo.match(/^(\d{4})/);
+  if (!dateMatch) return null;
+
+  const mmdd = dateMatch[1];
+  const month = mmdd.substring(0, 2);
+  const day = mmdd.substring(2, 4);
+  const date = `${year}-${month}-${day}`;
+
+  // 職種を抽出
+  let jobType: JobType | null = null;
+  for (const [key, value] of Object.entries(SCOUT_JOB_TYPE_MAP)) {
+    if (memo.toUpperCase().includes(key.toUpperCase())) {
+      jobType = value;
+      break;
+    }
+  }
+
+  return { date, jobType, memo };
+}
+
+/**
+ * スカウトメールの日別送信数を取得（スカウトメモベース）
+ * スカウトメモの形式: "1226 DH スカウト" → 12/26にDHに1通送信
  */
 export async function scrapeGuppyScoutMessages(
   clinicId: string,
   clinicName: string,
   loginId: string,
   password: string
-): Promise<{ sentCount: number; replyCount: number } | null> {
+): Promise<{ dailyData: DailyScoutData[]; totalSent: number } | null> {
   let browser: Browser | null = null;
 
   try {
@@ -318,8 +469,7 @@ export async function scrapeGuppyScoutMessages(
     await page.fill('input[name="data[Account][login_id]"]', loginId);
     await page.fill('input[name="data[Account][password]"]', password);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
-    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
 
     // ログイン確認
     if (page.url().includes('login')) {
@@ -327,57 +477,71 @@ export async function scrapeGuppyScoutMessages(
       return null;
     }
 
-    // 未返信スカウトメールページへ
+    // スカウト未返信ページへ
     await page.goto(`${GUPPY_MESSAGE_THREAD_URL}?filter_tab=scout_no_reply`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     // 「もっと見る」ボタンをクリックして全件表示
-    let loadMoreExists = true;
-    while (loadMoreExists) {
-      const loadMoreButton = await page.$('button:has-text("もっと見る"), a:has-text("もっと見る"), .load-more');
+    let loadMoreCount = 0;
+    while (true) {
+      const loadMoreButton = await page.$('a.mod-button:has-text("もっと見る"), button:has-text("もっと見る")');
       if (loadMoreButton) {
         await loadMoreButton.click();
         await page.waitForTimeout(1000);
+        loadMoreCount++;
       } else {
-        loadMoreExists = false;
+        break;
       }
     }
 
-    // 未返信スカウトメール数をカウント
-    const sentCount = await page.evaluate(() => {
-      // スカウトメールのリストアイテムをカウント
-      const items = document.querySelectorAll('.message-thread-item, .scout-item, tr[data-type="scout"]');
-      return items.length;
+    // スカウトメモを抽出
+    const scoutMemos = await page.evaluate(() => {
+      const memos: { memo: string; created: string }[] = [];
+
+      // scout-memo-list内のメモを取得
+      const memoLists = document.querySelectorAll('.scout-memo-list');
+      memoLists.forEach((list) => {
+        const items = list.querySelectorAll('li.list-memo-body');
+        items.forEach((item) => {
+          const memoText = item.childNodes[0]?.textContent?.trim() || '';
+          const createdSpan = item.querySelector('.list-memo-created');
+          const created = createdSpan?.textContent?.trim() || '';
+
+          if (memoText && created) {
+            memos.push({ memo: memoText, created });
+          }
+        });
+      });
+
+      return memos;
     });
 
-    // 返信ありページへ
-    await page.goto(GUPPY_MESSAGE_THREAD_URL, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1000);
-
-    // 「もっと見る」ボタンをクリックして全件表示
-    loadMoreExists = true;
-    while (loadMoreExists) {
-      const loadMoreButton = await page.$('button:has-text("もっと見る"), a:has-text("もっと見る"), .load-more');
-      if (loadMoreButton) {
-        await loadMoreButton.click();
-        await page.waitForTimeout(1000);
-      } else {
-        loadMoreExists = false;
+    // メモをパースして「スカウト」を含むものだけ抽出
+    const scoutEntries: ScoutMemoEntry[] = [];
+    for (const { memo, created } of scoutMemos) {
+      const entry = parseScoutMemo(memo, created);
+      if (entry && memo.includes('スカウト')) {
+        scoutEntries.push(entry);
       }
     }
 
-    // 返信ありスカウトメール数をカウント
-    const replyCount = await page.evaluate(() => {
-      const items = document.querySelectorAll('.message-thread-item, .scout-item, tr[data-type="scout"]');
-      return items.length;
-    });
+    // 日別に集計
+    const dailyCountsMap = new Map<string, number>();
+    for (const entry of scoutEntries) {
+      dailyCountsMap.set(entry.date, (dailyCountsMap.get(entry.date) || 0) + 1);
+    }
 
-    console.log(`[${clinicName}] スカウトメール: 送信${sentCount + replyCount}通, 返信${replyCount}通`);
+    // DailyScoutData形式に変換
+    const dailyData: DailyScoutData[] = Array.from(dailyCountsMap.entries()).map(([date, sentCount]) => ({
+      date,
+      sentCount,
+      replyCount: 0, // 返信数は現状追跡していない
+    }));
 
-    return {
-      sentCount: sentCount + replyCount, // 未返信 + 返信あり = 全送信数
-      replyCount,
-    };
+    const totalSent = scoutEntries.length;
+    console.log(`[${clinicName}] スカウトメール: ${totalSent}通 (${dailyData.length}日分)`);
+
+    return { dailyData, totalSent };
   } catch (error) {
     console.error(`Error scraping scout messages for clinic ${clinicId}:`, error);
     return null;

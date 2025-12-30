@@ -8,6 +8,7 @@ export async function GET(
   const { slug } = await params;
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month'); // Format: YYYY-MM
+  const jobType = searchParams.get('job_type'); // 'dr', 'dh', 'da', or null for all
 
   const supabase = getSupabaseAdmin();
 
@@ -38,7 +39,7 @@ export async function GET(
       endDate = `${year}-${String(monthNum).padStart(2, '0')}-${lastDay}`;
     }
 
-    // 日別メトリクスを取得（日付降順 = 最新が上）
+    // 日別メトリクスを取得
     let metricsQuery = supabase
       .from('metrics')
       .select('*')
@@ -46,6 +47,15 @@ export async function GET(
 
     if (startDate && endDate) {
       metricsQuery = metricsQuery.gte('date', startDate).lte('date', endDate);
+    }
+
+    // 職種フィルタリング
+    // jobType指定あり → その職種のデータのみ
+    // jobType指定なし → 合計データ（job_type = null）のみ
+    if (jobType) {
+      metricsQuery = metricsQuery.eq('job_type', jobType);
+    } else {
+      metricsQuery = metricsQuery.is('job_type', null);
     }
 
     const { data: metrics } = await metricsQuery.order('date', { ascending: true });
@@ -73,6 +83,45 @@ export async function GET(
     }
 
     const { data: bitlyClicks } = await bitlyQuery.order('date', { ascending: true });
+
+    // Bitlyリンク別クリックデータを取得
+    const { data: bitlyLinks } = await supabase
+      .from('bitly_links')
+      .select(`
+        id,
+        bitlink,
+        source,
+        link_id,
+        label,
+        long_url
+      `)
+      .eq('clinic_id', clinic.id);
+
+    // リンク別のクリック数を取得
+    let bitlyLinkClicksData: { bitly_link_id: string; source: string; link_id: string; label: string | null; total_clicks: number }[] = [];
+    if (bitlyLinks && bitlyLinks.length > 0) {
+      for (const link of bitlyLinks) {
+        let linkClicksQuery = supabase
+          .from('bitly_link_clicks')
+          .select('click_count')
+          .eq('bitly_link_id', link.id);
+
+        if (startDate && endDate) {
+          linkClicksQuery = linkClicksQuery.gte('date', startDate).lte('date', endDate);
+        }
+
+        const { data: linkClicks } = await linkClicksQuery;
+        const totalClicks = (linkClicks || []).reduce((sum, c) => sum + c.click_count, 0);
+
+        bitlyLinkClicksData.push({
+          bitly_link_id: link.id,
+          source: link.source,
+          link_id: link.link_id,
+          label: link.label,
+          total_clicks: totalClicks,
+        });
+      }
+    }
 
     // 選択月の合計を計算
     const totalDisplayCount = (metrics || []).reduce((sum, m) => sum + (m.display_count || 0), 0);
@@ -109,6 +158,7 @@ export async function GET(
       summary,
       scoutMessages: scoutMessages || [],
       bitlyClicks: bitlyClicks || [],
+      bitlyLinkClicks: bitlyLinkClicksData,
       availableMonths,
       currentMonth: month || availableMonths[0] || null,
     });

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { scrapeGuppy, scrapeGuppyScoutMessages } from '@/lib/scraper';
+import { scrapeGuppyByJobType, scrapeGuppyScoutMessages } from '@/lib/scraper';
 import { sendDiscordNotification, sendViewRateAlert, isViewRateAbnormal, calculateViewRate } from '@/lib/discord';
-import { fetchAllClinicsBitlyClicks } from '@/lib/bitly';
+import { fetchAllClinicsBitlyClicks, fetchAndSaveBitlyLinkClicks } from '@/lib/bitly';
 import { Clinic } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
         (sum, m) => sum + (m.application_count || 0), 0
       );
 
-      // スクレイピング実行
-      const scrapeResult = await scrapeGuppy(
+      // スクレイピング実行（職種別データ取得）
+      const scrapeResult = await scrapeGuppyByJobType(
         clinic.id,
         clinic.name,
         clinic.guppy_login_id,
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (scrapeResult) {
-        // 日別データをUPSERT
+        // 合計データをUPSERT（job_type = null）
         for (const log of scrapeResult.accessLogs) {
           const { error: upsertError } = await supabase
             .from('metrics')
@@ -89,9 +89,35 @@ export async function POST(request: NextRequest) {
           }
         }
 
+        // 職種別データをUPSERT
+        if (scrapeResult.jobTypeAccessLogs) {
+          for (const jobTypeLog of scrapeResult.jobTypeAccessLogs) {
+            for (const log of jobTypeLog.accessLogs) {
+              const { error: upsertError } = await supabase
+                .from('metrics')
+                .upsert({
+                  clinic_id: clinic.id,
+                  date: log.date,
+                  source: 'guppy',
+                  job_type: jobTypeLog.jobType, // 職種別
+                  display_count: log.displayCount,
+                  view_count: log.viewCount,
+                  redirect_count: log.redirectCount,
+                  application_count: log.applicationCount,
+                }, {
+                  onConflict: 'clinic_id,date,source,job_type'
+                });
+
+              if (upsertError) {
+                console.error(`Error upserting job type metrics for ${clinic.name} (${jobTypeLog.jobType}) on ${log.date}:`, upsertError);
+              }
+            }
+          }
+        }
+
         // 新規応募があればDiscord通知
         const newTotalApplications = scrapeResult.accessLogs.reduce(
-          (sum, log) => sum + log.applicationCount, 0
+          (sum: number, log) => sum + log.applicationCount, 0
         );
 
         if (newTotalApplications > prevTotalApplications) {
@@ -102,7 +128,7 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        // スカウトメールデータ取得
+        // スカウトメールデータ取得（日別）
         const scoutResult = await scrapeGuppyScoutMessages(
           clinic.id,
           clinic.name,
@@ -110,29 +136,31 @@ export async function POST(request: NextRequest) {
           clinic.guppy_password
         );
 
-        if (scoutResult) {
-          const today = new Date().toISOString().split('T')[0];
-          const { error: scoutUpsertError } = await supabase
-            .from('scout_messages')
-            .upsert({
-              clinic_id: clinic.id,
-              date: today,
-              source: 'guppy',
-              sent_count: scoutResult.sentCount,
-              reply_count: scoutResult.replyCount,
-            }, {
-              onConflict: 'clinic_id,date,source'
-            });
+        if (scoutResult && scoutResult.dailyData.length > 0) {
+          // 日別データをUPSERT
+          for (const dayData of scoutResult.dailyData) {
+            const { error: scoutUpsertError } = await supabase
+              .from('scout_messages')
+              .upsert({
+                clinic_id: clinic.id,
+                date: dayData.date,
+                source: 'guppy',
+                sent_count: dayData.sentCount,
+                reply_count: dayData.replyCount,
+              }, {
+                onConflict: 'clinic_id,date,source'
+              });
 
-          if (scoutUpsertError) {
-            console.error(`Error upserting scout messages for ${clinic.name}:`, scoutUpsertError);
+            if (scoutUpsertError) {
+              console.error(`Error upserting scout messages for ${clinic.name} on ${dayData.date}:`, scoutUpsertError);
+            }
           }
         }
 
         results.push({
           clinic: clinic.name,
           daysProcessed: scrapeResult.accessLogs.length,
-          scoutData: scoutResult ? { sent: scoutResult.sentCount, reply: scoutResult.replyCount } : null,
+          scoutData: scoutResult ? { totalSent: scoutResult.totalSent, days: scoutResult.dailyData.length } : null,
           success: true,
         });
       } else {
@@ -145,8 +173,11 @@ export async function POST(request: NextRequest) {
       await sendViewRateAlert(alert);
     }
 
-    // Bitlyクリック数を取得
+    // Bitlyクリック数を取得（従来の単一URL方式）
     const bitlyResults = await fetchAllClinicsBitlyClicks();
+
+    // Bitlyリンク別クリック数を取得（命名規則ベースの自動検出）
+    const bitlyLinkResults = await fetchAndSaveBitlyLinkClicks();
 
     return NextResponse.json({
       success: true,
@@ -154,6 +185,7 @@ export async function POST(request: NextRequest) {
       results,
       viewRateAlerts: viewRateAlerts.length,
       bitlyResults,
+      bitlyLinkResults,
     });
   } catch (error) {
     console.error('Scrape API error:', error);

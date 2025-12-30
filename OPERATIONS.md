@@ -11,35 +11,49 @@
 歯科医院向け求人媒体（GUPPY/ジョブメドレー/Quacareer）のアクセスデータを収集・表示するダッシュボード
 
 ### 直近やったこと
-- Phase 1実装完了（2025-12-30）
-  - 職種別データ対応（Dr/DH/DA）のDB設計・スクレイパー準備
-  - スカウトメール取得機能（送信数・返信数）
-  - 閲覧率30%超アラート（Discord通知）
-  - Bitly API連携（クリック数取得）
-  - ダッシュボードUI更新（職種タブ・スカウトセクション追加）
-  - Cron設定（1日4回: 0時/6時/12時/18時）
+- Phase 1 全完了（2025-12-30）
+  - [x] DBマイグレーション実行（job_type, source, scout_messages, bitly_clicks）
+  - [x] 環境変数追加: `BITLY_ACCESS_TOKEN`
+  - [x] Bitly URL登録（3クリニック: 津谷歯科医院, みどりの歯科医院, Well-being Dental Clinic）
+  - [x] Vercelデプロイ完了（https://dashbord-pink.vercel.app）
+  - [x] トップページ → /clinic リダイレクト実装
+  - [x] Cron設定（Hobby制限で1日1回に変更）
+  - [x] 職種別データ取得・表示（Phase 1-D）
+  - [x] スカウトメール日別送信数取得（Phase 1-E）
+  - [x] Bitlyクリック率計算ロジック確認済み
+
+- Phase 1-G: Bitlyリンク別クリック追跡（2025-12-30）
+  - [x] `bitly_links`テーブル新規作成（個別リンク管理用）
+  - [x] `bitly_link_clicks`テーブル新規作成（リンク別日別クリック数）
+  - [x] Bitly APIでグループ内全リンク取得機能追加
+  - [x] 命名規則でリンクをフィルタリング: `bit.ly/{クリニック名}-{媒体}-{ID}`
+  - [x] UIにスカウト文面別クリック数テーブルを表示
 
 ### 次にやること
-- [ ] DBマイグレーション実行（`supabase/migrations/001_add_job_type_and_new_tables.sql`）
-- [ ] 環境変数追加: `BITLY_ACCESS_TOKEN`
-- [ ] 各クリニックのBitly URL登録（clinics.bitly_url）
-- [ ] GUPPY管理画面の職種タブセレクタ確認・調整
-- [ ] Vercelデプロイ
-- [ ] Phase 2: ジョブメドレー対応
+
+**次回のDB適用**
+- [ ] マイグレーション実行: `supabase/migrations/002_add_bitly_links_table.sql`
+
+**Bitly URL命名規則での運用開始**
+- 命名規則: `bit.ly/{クリニックslug}-{媒体}-{ID}`
+- 例: `bit.ly/tsutani-guppy-001`, `bit.ly/midorino-quacareer-002`
+- Bitlyで短縮URL作成時に「カスタムバックハーフ」を上記形式で設定
+
+**Phase 2: ジョブメドレー対応**（後回し）
 
 ### 詰まっていること
-- 職種タブのセレクタ（`scraper.ts`の`selectJobTypeTab`関数）はGUPPY管理画面の実際のHTML構造確認が必要
+- なし
 
 ### 次回の最初に実行するコマンド
 ```bash
 # 1. Supabase SQL Editorでマイグレーション実行
-# ファイル: supabase/migrations/001_add_job_type_and_new_tables.sql
+# ファイル: supabase/migrations/002_add_bitly_links_table.sql
 
-# 2. 環境変数追加（.env.local）
-# BITLY_ACCESS_TOKEN=your-bitly-token
-
-# 3. 開発サーバー起動
+# 2. 開発サーバー起動
 npm run dev
+
+# 3. スクレイピング実行（Bitlyリンク取得含む）
+curl -X POST http://localhost:3000/api/scrape -H "Authorization: Bearer ${CRON_SECRET}"
 ```
 
 ### 関連コマンド
@@ -82,8 +96,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | f62a7f1 feat: Phase1実装 - 職種別対応、スカウトメール、Bitly連携、閲覧率アラート |
-| Updated | 2025-12-30 16:17:30 |
+| Last Commit | be31528 feat: Phase1実装 - 職種別対応、スカウトメール、Bitly連携、閲覧率アラート |
+| Updated | 2025-12-30 22:42:31 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
@@ -155,13 +169,16 @@ curl -X POST http://localhost:3000/api/scrape \
 - `clinics`: クライアント（歯科医院）情報 + bitly_url
 - `metrics`: 日別アクセスデータ + job_type
 - `scout_messages`: スカウトメールデータ（送信数・返信数・開封数）
-- `bitly_clicks`: Bitlyクリックデータ
+- `bitly_clicks`: Bitlyクリックデータ（クリニック単位の合計）
+- `bitly_links`: Bitlyリンク管理（命名規則: `{slug}-{source}-{id}`）
+- `bitly_link_clicks`: リンク別日別クリック数
 
 ### スキーマ適用
 ```bash
 # Supabase Dashboard → SQL Editor で実行
 # 初期スキーマ: supabase/schema.sql
-# マイグレーション: supabase/migrations/001_add_job_type_and_new_tables.sql
+# マイグレーション1: supabase/migrations/001_add_job_type_and_new_tables.sql
+# マイグレーション2: supabase/migrations/002_add_bitly_links_table.sql
 ```
 
 ### シードデータ
@@ -286,3 +303,4 @@ vercel.json                 # Cron設定（1日4回）
 | 2024-12-29 | 17クライアント、6ヶ月分データ取得完了 |
 | 2025-12-30 | Phase 1完了（職種別、スカウト、Bitly、閲覧率アラート、Cron設定） |
 | 2025-12-30 | 要件定義書作成（requirements.md、媒体別詳細要件） |
+| 2025-12-30 | Phase 1-G: Bitlyリンク別クリック追跡機能追加（命名規則ベース自動検出） |

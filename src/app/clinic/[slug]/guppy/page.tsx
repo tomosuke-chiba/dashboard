@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { DailyMetrics, ScoutMessage, BitlyClick, JobType, JOB_TYPE_LABELS, PHASE1_JOB_TYPES } from '@/types';
 
+interface BitlyLinkClick {
+  bitly_link_id: string;
+  source: string;
+  link_id: string;
+  label: string | null;
+  total_clicks: number;
+}
+
 interface ClinicData {
   clinic: { id: string; name: string; slug: string };
   metrics: DailyMetrics[];
@@ -17,6 +25,7 @@ interface ClinicData {
   };
   scoutMessages?: ScoutMessage[];
   bitlyClicks?: BitlyClick[];
+  bitlyLinkClicks?: BitlyLinkClick[];
   availableMonths: string[];
   currentMonth: string | null;
 }
@@ -35,8 +44,12 @@ export default function GuppyPage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const monthParam = selectedMonth ? `?month=${selectedMonth}` : '';
-      const res = await fetch(`/api/clinics/${slug}${monthParam}`);
+      const params = new URLSearchParams();
+      if (selectedMonth) params.set('month', selectedMonth);
+      if (selectedTab !== 'all') params.set('job_type', selectedTab);
+
+      const queryString = params.toString();
+      const res = await fetch(`/api/clinics/${slug}${queryString ? `?${queryString}` : ''}`);
       if (res.ok) {
         const json = await res.json();
         setData(json);
@@ -47,7 +60,7 @@ export default function GuppyPage() {
       setLoading(false);
     }
     fetchData();
-  }, [slug, selectedMonth]);
+  }, [slug, selectedMonth, selectedTab]);
 
   if (loading && !data) {
     return (
@@ -95,10 +108,14 @@ export default function GuppyPage() {
     ? ((scoutSummary.reply / scoutSummary.sent) * 100).toFixed(1)
     : '0.0';
 
-  // Bitlyクリック数のサマリー
+  // Bitlyクリック数のサマリーとクリック率
   const totalBitlyClicks = data.bitlyClicks?.reduce(
     (sum, click) => sum + click.click_count, 0
   ) || 0;
+
+  const bitlyClickRate = scoutSummary.sent > 0
+    ? ((totalBitlyClicks / scoutSummary.sent) * 100).toFixed(1)
+    : '0.0';
 
   // 職種別フィルタリング（将来の拡張用）
   const filteredMetrics = selectedTab === 'all'
@@ -177,7 +194,6 @@ export default function GuppyPage() {
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-2">※ 職種別データは今後対応予定です</p>
         </div>
 
         {/* サマリーカード */}
@@ -200,7 +216,7 @@ export default function GuppyPage() {
             <h2 className="text-lg font-semibold text-gray-800">スカウトメール</h2>
           </div>
           <div className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-indigo-50 rounded-lg p-4">
                 <p className="text-sm text-indigo-700 opacity-80">送信数</p>
                 <p className="text-2xl font-bold text-indigo-700 mt-1">{scoutSummary.sent.toLocaleString()}</p>
@@ -217,9 +233,61 @@ export default function GuppyPage() {
                 <p className="text-sm text-pink-700 opacity-80">Bitlyクリック数</p>
                 <p className="text-2xl font-bold text-pink-700 mt-1">{totalBitlyClicks.toLocaleString()}</p>
               </div>
+              <div className="bg-amber-50 rounded-lg p-4">
+                <p className="text-sm text-amber-700 opacity-80">Bitlyクリック率</p>
+                <p className="text-2xl font-bold text-amber-700 mt-1">{bitlyClickRate}%</p>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* スカウト文面別クリック数セクション */}
+        {data.bitlyLinkClicks && data.bitlyLinkClicks.length > 0 && (
+          <div className="bg-white rounded-lg shadow mb-8">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-800">スカウト文面別クリック数</h2>
+              <p className="text-sm text-gray-500 mt-1">命名規則: bit.ly/{'{クリニック名}'}-{'{媒体}'}-{'{ID}'}</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">媒体</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">リンクID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ラベル</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">クリック数</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {data.bitlyLinkClicks
+                    .sort((a, b) => b.total_clicks - a.total_clicks)
+                    .map((link) => (
+                      <tr key={link.bitly_link_id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            link.source === 'guppy' ? 'bg-green-100 text-green-800' :
+                            link.source === 'quacareer' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {link.source.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                          {link.link_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {link.label || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
+                          {link.total_clicks.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* 日別データテーブル */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
