@@ -9,6 +9,7 @@
 
 ### 目的
 歯科医院向け求人媒体（GUPPY/ジョブメドレー/Quacareer）のアクセスデータを収集・表示するダッシュボード
+Notion案件進捗ダッシュボード（/dashboard/sales）の集計・可視化
 
 ### 直近やったこと
 - Phase 1 全完了（2025-12-30）
@@ -29,7 +30,21 @@
   - [x] 命名規則でリンクをフィルタリング: `bit.ly/{クリニック名}-{媒体}-{ID}`
   - [x] UIにスカウト文面別クリック数テーブルを表示
 
+- Notion案件進捗ダッシュボード（2025-12-31）
+  - [x] Notion API集計（契約完了/振込確認の契約完了日で当月カウント）
+  - [x] ステータス正規化（絵文字なし/空白揺れ対応）
+  - [x] 月別・年間（2026年通年）切替
+  - [x] 年間表示は月次値（1月〜12月）でグラフ表示、Y軸0〜12固定
+  - [x] 9月ノルマを9件に変更（年間ノルマ100）
+  - [x] リード件数は「リード＋日程確定」の合算表示
+  - [x] UIデザイン刷新（ダークモード/ライトモード切替、ヤギ/人アイコン視認性向上）
+  - [x] useThemeフック実装（テーマ切替・永続化）
+  - [x] /dashboard/sales ページ完成
+
 ### 次にやること
+
+**Notion案件進捗ダッシュボード**
+- [ ] 追加機能検討中（ユーザーフィードバック待ち）
 
 **次回のDB適用**
 - [ ] マイグレーション実行: `supabase/migrations/002_add_bitly_links_table.sql`
@@ -60,6 +75,9 @@ curl -X POST http://localhost:3000/api/scrape -H "Authorization: Bearer ${CRON_S
 ```bash
 # スクレイピング手動実行
 curl -X POST http://localhost:3000/api/scrape -H "Authorization: Bearer ${CRON_SECRET}"
+
+# Notionダッシュボード集計
+curl http://localhost:3000/api/dashboard/summary?year=2026&month=0
 
 # クリニックCSVインポート
 npx ts-node scripts/import-clinics.ts
@@ -93,11 +111,11 @@ npm run dev
 <!-- AUTO-UPDATED-START -->
 | Key | Value |
 |-----|-------|
-| Node | v25.2.1 |
-| npm | 11.6.2 |
+| Node | not installed |
+| npm | not installed |
 | Branch | main |
-| Last Commit | 341f2a6 12/30 done |
-| Updated | 2025-12-30 22:51:23 |
+| Last Commit | 493e75d guppy要件定義変更 |
+| Updated | 2025-12-31 14:39:49 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
@@ -116,6 +134,9 @@ npm run dev
 | CRON_SECRET | 任意の値を設定（API認証用） | Yes |
 | NEXT_PUBLIC_BASE_URL | デプロイ後の本番URL or http://localhost:3000 | Yes |
 | BITLY_ACCESS_TOKEN | Bitly Settings → API → Access Token | Yes (Phase1) |
+| NOTION_API_KEY | Notion Integrations → Internal Integration | Yes (Dashboard) |
+| NOTION_DATABASE_ID | Notion DB ID | Yes (Dashboard) |
+| DASHBOARD_PASSWORD | 任意の値を設定 | Yes (Dashboard) |
 
 ---
 
@@ -304,3 +325,4 @@ vercel.json                 # Cron設定（1日4回）
 | 2025-12-30 | Phase 1完了（職種別、スカウト、Bitly、閲覧率アラート、Cron設定） |
 | 2025-12-30 | 要件定義書作成（requirements.md、媒体別詳細要件） |
 | 2025-12-30 | Phase 1-G: Bitlyリンク別クリック追跡機能追加（命名規則ベース自動検出） |
+| 2025-12-31 | Notion案件進捗ダッシュボード完成（UIデザイン刷新、ダークモード対応） |

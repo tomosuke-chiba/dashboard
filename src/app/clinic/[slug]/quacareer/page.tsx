@@ -1,3 +1,5 @@
+import { getSupabaseAdmin } from '@/lib/supabase';
+
 interface QuacareerPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -5,12 +7,35 @@ interface QuacareerPageProps {
 export default async function QuacareerPage({ params }: QuacareerPageProps) {
   const { slug } = await params;
 
+  // クリニック名を取得
+  const supabase = getSupabaseAdmin();
+  let clinicName = slug;
+  if (supabase) {
+    const { data: clinic } = await supabase
+      .from('clinics')
+      .select('name')
+      .eq('slug', slug)
+      .single();
+    if (clinic) {
+      clinicName = clinic.name;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-6">
+          {/* パンくずナビゲーション */}
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+            <a href="/clinic" className="hover:text-gray-700 hover:underline">クリニック一覧</a>
+            <span>/</span>
+            <a href={`/clinic/${slug}`} className="hover:text-gray-700 hover:underline">{clinicName}</a>
+            <span>/</span>
+            <span className="text-gray-800 font-medium">Quacareer</span>
+          </nav>
+
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-800">Quacareer</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{clinicName}</h1>
             <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">
               Quacareer
             </span>

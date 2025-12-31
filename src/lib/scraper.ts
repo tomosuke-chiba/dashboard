@@ -406,10 +406,16 @@ interface ScoutMemoEntry {
   memo: string;
 }
 
+// スレッドごとのスカウトメモ情報
+interface ThreadScoutInfo {
+  threadId: string;
+  memos: { memo: string; created: string }[];
+}
+
 export interface DailyScoutData {
   date: string;
   sentCount: number;
-  replyCount: number; // 現状は0固定（返信追跡は別途実装が必要）
+  replyCount: number;
 }
 
 /**
@@ -442,15 +448,73 @@ function parseScoutMemo(memo: string, createdDate: string): ScoutMemoEntry | nul
 }
 
 /**
- * スカウトメールの日別送信数を取得（スカウトメモベース）
- * スカウトメモの形式: "1226 DH スカウト" → 12/26にDHに1通送信
+ * ページからスレッドごとのスカウトメモを抽出
+ */
+async function extractThreadScoutInfos(page: Page): Promise<ThreadScoutInfo[]> {
+  return await page.evaluate(() => {
+    const results: { threadId: string; memos: { memo: string; created: string }[] }[] = [];
+
+    // 各スレッドの.block-message-boxを取得
+    const threadElements = document.querySelectorAll('li.block-message-box');
+
+    threadElements.forEach((threadEl) => {
+      const threadId = threadEl.getAttribute('data-message_thread_id') || '';
+      if (!threadId) return;
+
+      const memos: { memo: string; created: string }[] = [];
+
+      // このスレッドのスカウトメモを取得
+      const memoList = threadEl.querySelector('.scout-memo-list');
+      if (memoList) {
+        const items = memoList.querySelectorAll('li.list-memo-body');
+        items.forEach((item) => {
+          const memoText = item.childNodes[0]?.textContent?.trim() || '';
+          const createdSpan = item.querySelector('.list-memo-created');
+          const created = createdSpan?.textContent?.trim() || '';
+
+          if (memoText && created) {
+            memos.push({ memo: memoText, created });
+          }
+        });
+      }
+
+      results.push({ threadId, memos });
+    });
+
+    return results;
+  });
+}
+
+/**
+ * 「もっと見る」ボタンを繰り返しクリックして全件表示
+ */
+async function loadAllThreads(page: Page): Promise<void> {
+  while (true) {
+    const loadMoreButton = await page.$('a.mod-button:has-text("もっと見る"), button:has-text("もっと見る"), a#js-auto-pager-more');
+    if (loadMoreButton) {
+      await loadMoreButton.click();
+      await page.waitForTimeout(1000);
+    } else {
+      break;
+    }
+  }
+}
+
+/**
+ * スカウトメールの日別送信数・返信数を取得（スカウトメモベース）
+ *
+ * 取得方法:
+ * 1. scout_no_reply タブから未返信スカウトのスレッドIDとメモを取得
+ * 2. type_scout フィルタでスカウト全体のスレッドIDとメモを取得
+ * 3. 全体 - 未返信 = 返信ありスレッドを特定
+ * 4. 各スレッドのスカウトメモから日付を抽出して日別に集計
  */
 export async function scrapeGuppyScoutMessages(
   clinicId: string,
   clinicName: string,
   loginId: string,
   password: string
-): Promise<{ dailyData: DailyScoutData[]; totalSent: number } | null> {
+): Promise<{ dailyData: DailyScoutData[]; totalSent: number; totalReply: number } | null> {
   let browser: Browser | null = null;
 
   try {
@@ -477,71 +541,93 @@ export async function scrapeGuppyScoutMessages(
       return null;
     }
 
-    // スカウト未返信ページへ
+    // ========================================
+    // Step 1: スカウト未返信ページから未返信スレッドを取得
+    // ========================================
     await page.goto(`${GUPPY_MESSAGE_THREAD_URL}?filter_tab=scout_no_reply`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(2000);
+    await loadAllThreads(page);
 
-    // 「もっと見る」ボタンをクリックして全件表示
-    let loadMoreCount = 0;
-    while (true) {
-      const loadMoreButton = await page.$('a.mod-button:has-text("もっと見る"), button:has-text("もっと見る")');
-      if (loadMoreButton) {
-        await loadMoreButton.click();
-        await page.waitForTimeout(1000);
-        loadMoreCount++;
-      } else {
-        break;
+    const noReplyThreadInfos = await extractThreadScoutInfos(page);
+    const noReplyThreadIds = new Set(noReplyThreadInfos.map(t => t.threadId));
+    console.log(`[${clinicName}] スカウト未返信スレッド数: ${noReplyThreadIds.size}`);
+
+    // ========================================
+    // Step 2: スカウト全体（type_scoutフィルタ）を取得
+    // ========================================
+    // POSTリクエストでtype_scoutフィルタを適用
+    await page.goto(`${GUPPY_MESSAGE_THREAD_URL}?filter_tab=all`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+
+    // type_scoutチェックボックスをクリックして検索
+    const typeScoutCheckbox = await page.$('input#OtherFilterTypeScout');
+    if (typeScoutCheckbox) {
+      await typeScoutCheckbox.check();
+      // 検索ボタンをクリック
+      const searchButton = await page.$('button.message_thread_modal_search_button');
+      if (searchButton) {
+        await searchButton.click();
+        await page.waitForTimeout(2000);
+        await page.waitForLoadState('networkidle');
       }
     }
 
-    // スカウトメモを抽出
-    const scoutMemos = await page.evaluate(() => {
-      const memos: { memo: string; created: string }[] = [];
+    await loadAllThreads(page);
+    const allScoutThreadInfos = await extractThreadScoutInfos(page);
+    console.log(`[${clinicName}] スカウト全体スレッド数: ${allScoutThreadInfos.length}`);
 
-      // scout-memo-list内のメモを取得
-      const memoLists = document.querySelectorAll('.scout-memo-list');
-      memoLists.forEach((list) => {
-        const items = list.querySelectorAll('li.list-memo-body');
-        items.forEach((item) => {
-          const memoText = item.childNodes[0]?.textContent?.trim() || '';
-          const createdSpan = item.querySelector('.list-memo-created');
-          const created = createdSpan?.textContent?.trim() || '';
+    // ========================================
+    // Step 3: 返信ありスレッドを特定
+    // ========================================
+    const repliedThreadInfos = allScoutThreadInfos.filter(t => !noReplyThreadIds.has(t.threadId));
+    console.log(`[${clinicName}] スカウト返信ありスレッド数: ${repliedThreadInfos.length}`);
 
-          if (memoText && created) {
-            memos.push({ memo: memoText, created });
-          }
-        });
-      });
+    // ========================================
+    // Step 4: 日別に送信数・返信数を集計
+    // ========================================
+    const dailySentMap = new Map<string, number>();
+    const dailyReplyMap = new Map<string, number>();
 
-      return memos;
-    });
-
-    // メモをパースして「スカウト」を含むものだけ抽出
-    const scoutEntries: ScoutMemoEntry[] = [];
-    for (const { memo, created } of scoutMemos) {
-      const entry = parseScoutMemo(memo, created);
-      if (entry && memo.includes('スカウト')) {
-        scoutEntries.push(entry);
+    // 全スカウトスレッドから送信数を集計
+    for (const threadInfo of allScoutThreadInfos) {
+      for (const memoData of threadInfo.memos) {
+        const entry = parseScoutMemo(memoData.memo, memoData.created);
+        if (entry && memoData.memo.includes('スカウト')) {
+          dailySentMap.set(entry.date, (dailySentMap.get(entry.date) || 0) + 1);
+        }
       }
     }
 
-    // 日別に集計
-    const dailyCountsMap = new Map<string, number>();
-    for (const entry of scoutEntries) {
-      dailyCountsMap.set(entry.date, (dailyCountsMap.get(entry.date) || 0) + 1);
+    // 返信ありスレッドから返信数を集計（最初のスカウトメモの日付を使用）
+    for (const threadInfo of repliedThreadInfos) {
+      // スカウトメモの中で最初の「スカウト」を含むメモを探す
+      for (const memoData of threadInfo.memos) {
+        const entry = parseScoutMemo(memoData.memo, memoData.created);
+        if (entry && memoData.memo.includes('スカウト')) {
+          dailyReplyMap.set(entry.date, (dailyReplyMap.get(entry.date) || 0) + 1);
+          break; // 1スレッドにつき1返信としてカウント
+        }
+      }
     }
+
+    // 全日付を収集
+    const allDates = new Set([...dailySentMap.keys(), ...dailyReplyMap.keys()]);
 
     // DailyScoutData形式に変換
-    const dailyData: DailyScoutData[] = Array.from(dailyCountsMap.entries()).map(([date, sentCount]) => ({
+    const dailyData: DailyScoutData[] = Array.from(allDates).map(date => ({
       date,
-      sentCount,
-      replyCount: 0, // 返信数は現状追跡していない
+      sentCount: dailySentMap.get(date) || 0,
+      replyCount: dailyReplyMap.get(date) || 0,
     }));
 
-    const totalSent = scoutEntries.length;
-    console.log(`[${clinicName}] スカウトメール: ${totalSent}通 (${dailyData.length}日分)`);
+    // 日付でソート（降順）
+    dailyData.sort((a, b) => b.date.localeCompare(a.date));
 
-    return { dailyData, totalSent };
+    const totalSent = Array.from(dailySentMap.values()).reduce((sum, count) => sum + count, 0);
+    const totalReply = repliedThreadInfos.length;
+    console.log(`[${clinicName}] スカウトメール: 送信${totalSent}通, 返信${totalReply}件 (${dailyData.length}日分)`);
+
+    return { dailyData, totalSent, totalReply };
   } catch (error) {
     console.error(`Error scraping scout messages for clinic ${clinicId}:`, error);
     return null;

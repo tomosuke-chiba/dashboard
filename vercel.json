@@ -3,6 +3,10 @@
     {
       "path": "/api/scrape",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/dashboard/refresh",
+      "schedule": "0 21 * * *"
     }
   ]
 }

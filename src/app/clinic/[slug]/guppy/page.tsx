@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { DailyMetrics, ScoutMessage, BitlyClick, JobType, JOB_TYPE_LABELS, PHASE1_JOB_TYPES } from '@/types';
+import { useTheme, ThemeToggle } from '@/hooks/useTheme';
 
 interface BitlyLinkClick {
   bitly_link_id: string;
@@ -35,6 +36,7 @@ type TabType = 'all' | JobType;
 export default function GuppyPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { isDark, toggleTheme, mounted } = useTheme();
 
   const [data, setData] = useState<ClinicData | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
@@ -62,19 +64,22 @@ export default function GuppyPage() {
     fetchData();
   }, [slug, selectedMonth, selectedTab]);
 
-  if (loading && !data) {
+  if (!mounted || (loading && !data)) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-500">読み込み中...</div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-pulse space-y-3">
+          <div className="h-3 w-24 bg-slate-200 rounded"></div>
+          <div className="h-3 w-16 bg-slate-200 rounded"></div>
+        </div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-slate-900" : "bg-slate-50"}`}>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800">クライアントが見つかりません</h1>
+          <h1 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>クライアントが見つかりません</h1>
         </div>
       </div>
     );
@@ -123,26 +128,40 @@ export default function GuppyPage() {
     : data.metrics.filter(m => m.job_type === selectedTab);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-800">{data.clinic.name}</h1>
-            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-              GUPPY
-            </span>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">アクセス状況ダッシュボード</p>
-          <div className="flex gap-2 mt-3">
-            <a href={`/clinic/${slug}/guppy`} className="px-3 py-1 bg-green-600 text-white text-sm rounded">
-              GUPPY
-            </a>
-            <a href={`/clinic/${slug}/job-medley`} className="px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded hover:bg-gray-300">
-              ジョブメドレー
-            </a>
-            <a href={`/clinic/${slug}/quacareer`} className="px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded hover:bg-gray-300">
-              Quacareer
-            </a>
+    <div className={`min-h-screen ${isDark ? "bg-slate-900" : "bg-slate-50"}`}>
+      <header className={`border-b ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
+        <div className="max-w-6xl mx-auto px-8 py-6">
+          <div className="flex justify-between items-start">
+            <div>
+              {/* パンくずナビゲーション */}
+              <nav className={`flex items-center gap-2 text-xs mb-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                <a href="/clinic" className={`hover:underline ${isDark ? "hover:text-slate-300" : "hover:text-slate-600"}`}>クリニック一覧</a>
+                <span>/</span>
+                <a href={`/clinic/${slug}`} className={`hover:underline ${isDark ? "hover:text-slate-300" : "hover:text-slate-600"}`}>{data.clinic.name}</a>
+                <span>/</span>
+                <span className={isDark ? "text-slate-300" : "text-slate-600"}>GUPPY</span>
+              </nav>
+
+              <div className="flex items-center gap-3">
+                <h1 className={`text-xl font-semibold tracking-tight ${isDark ? "text-slate-100" : "text-slate-800"}`}>{data.clinic.name}</h1>
+                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-xs font-medium rounded">
+                  GUPPY
+                </span>
+              </div>
+              <p className={`text-xs mt-1 tracking-wide ${isDark ? "text-slate-500" : "text-slate-400"}`}>アクセス状況ダッシュボード</p>
+              <div className="flex gap-2 mt-3">
+                <a href={`/clinic/${slug}/guppy`} className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg">
+                  GUPPY
+                </a>
+                <a href={`/clinic/${slug}/job-medley`} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                  ジョブメドレー
+                </a>
+                <a href={`/clinic/${slug}/quacareer`} className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${isDark ? "bg-slate-700 text-slate-300 hover:bg-slate-600" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                  Quacareer
+                </a>
+              </div>
+            </div>
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
           </div>
         </div>
       </header>

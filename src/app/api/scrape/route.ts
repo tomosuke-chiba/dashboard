@@ -160,7 +160,11 @@ export async function POST(request: NextRequest) {
         results.push({
           clinic: clinic.name,
           daysProcessed: scrapeResult.accessLogs.length,
-          scoutData: scoutResult ? { totalSent: scoutResult.totalSent, days: scoutResult.dailyData.length } : null,
+          scoutData: scoutResult ? {
+            totalSent: scoutResult.totalSent,
+            totalReply: scoutResult.totalReply,
+            days: scoutResult.dailyData.length
+          } : null,
           success: true,
         });
       } else {
