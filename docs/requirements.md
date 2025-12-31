@@ -405,3 +405,288 @@ BITLY_ACCESS_TOKEN          # 新規追加
 | 2025-12-30 | 大幅更新: 職種別対応、スカウトメール機能、Bitly連携、閲覧率アラート、3媒体の詳細要件追加 |
 | 2025-12-31 | ジョブメドレー/クオキャリアの実装状況と設定項目を更新 |
 | 2025-12-31 | ジョブメドレーのスカウト送信数を日別手入力に変更 |
+| 2026-01-01 | 採用成功率100%達成のための戦略・KPI・認証機能・目標管理機能を追加 |
+
+---
+
+## 12. 採用成功率100%達成のための追加要件（2026-01-01追加）
+
+### 12.1 プロジェクトゴールの再定義
+
+**採用成功の定義**：
+> クリニック別の目標採用人数を、契約から12ヶ月以内に全員採用すること
+
+**ダッシュボードのゴール**：
+> 各媒体での重要な指標を把握し、どのような問題が起きているかを一目で確認でき、その問題を改善するための施策が明確にわかるダッシュボードを提供する
+
+### 12.2 利用者とアクセス権限（更新）
+
+**利用者の変更**：
+- ~~貴社担当者のみ~~ → **御社担当者 + クライアント（歯科医院）の両方**
+
+| ロール | 説明 | 想定人数 |
+|--------|------|---------|
+| 管理者（御社担当者） | 全クリニックのデータを閲覧・編集可能 | 数名 |
+| クライアント（歯科医院） | 自院のデータのみ閲覧可能 | 10-50件 |
+
+**認証方式**：シンプル方式
+- クリニックごとに1つのパスワードを設定
+- パスワードを知っている人は該当クリニックのデータにアクセス可能
+- 管理者は別の管理者パスワードで全クリニックにアクセス可能
+
+**アクセス権限マトリクス**：
+
+| 機能 | 管理者 | クライアント |
+|------|--------|-------------|
+| 自院のデータ閲覧 | ✅ | ✅ |
+| 他院のデータ閲覧 | ✅ | ❌ |
+| 全クリニック一覧 | ✅ | ❌ |
+| データ入力・編集 | ✅ | ❌ |
+| 目標採用人数設定 | ✅ | ❌ |
+| スカウト文面登録 | ✅ | ❌ |
+| KPIアラート閲覧 | ✅ | ✅ |
+| 施策対応表閲覧 | ✅ | ✅ |
+
+### 12.3 新規機能要件
+
+#### 12.3.1 認証機能【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| AUTH-01 | クリニック別パスワード認証 | URLアクセス時にパスワード入力画面を表示 |
+| AUTH-02 | 管理者認証 | 管理者パスワードで全クリニックにアクセス可能 |
+| AUTH-03 | セッション管理 | ログイン状態を一定時間維持 |
+| AUTH-04 | パスワード管理画面 | 管理者がクリニック別パスワードを設定・変更 |
+
+#### 12.3.2 目標採用人数管理【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| GOAL-01 | 目標設定画面 | クリニック別・職種別に目標人数を設定 |
+| GOAL-02 | 契約期間設定 | 契約開始日・契約期間（月数）を設定 |
+| GOAL-03 | 進捗率表示 | 目標に対する現在の採用人数・進捗率を表示 |
+| GOAL-04 | 進捗アラート | 残期間に対して進捗が遅い場合にアラート表示 |
+
+#### 12.3.3 スカウト文面管理【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| SCOUT-01 | GUPPY文面登録 | 件名・本文・Bitlyリンク前訴求文を手入力で登録 |
+| SCOUT-02 | ジョブメドレー文面登録 | 1文目・本文・対象条件を手入力で登録 |
+| SCOUT-03 | Quacareer文面拡張 | 既存テーブルに件名・1文目・送信時間帯を追加 |
+| SCOUT-04 | 文面履歴管理 | 使用期間を記録し、効果比較可能に |
+| SCOUT-05 | 文面一覧表示 | ダッシュボード上で文面を閲覧可能 |
+
+#### 12.3.4 KPIアラート機能【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| KPI-01 | KPIサマリーカード | 各指標を色分け（赤/黄/緑）で表示 |
+| KPI-02 | 警告アラート | 閾値を下回った場合に改善施策を表示 |
+| KPI-03 | 優良アラート | 閾値を上回った場合にさらなる改善提案を表示 |
+| KPI-04 | アラート一覧 | 現在のアラートを一覧表示 |
+| KPI-05 | データ色付け | テーブル内の数値を閾値に基づき色付け |
+
+#### 12.3.5 プロフィール情報取得【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| PROF-01 | GUPPYプロフィール情報 | 充実度・独立応援資金設定・更新日を取得 |
+| PROF-02 | ジョブメドレー重要指標 | スピード返信アイコン・職員の声・職場環境の有無を取得 |
+
+#### 12.3.6 採用決定管理【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| HIRE-01 | 採用決定登録 | 採用日・職種・媒体・経路を登録 |
+| HIRE-02 | 目標進捗自動更新 | 採用決定登録時に進捗率を自動更新 |
+
+### 12.4 新規テーブル設計
+
+#### clinic_auth（クリニック認証）
+
+```sql
+CREATE TABLE clinic_auth (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### recruitment_goals（目標採用人数）
+
+```sql
+CREATE TABLE recruitment_goals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
+  contract_start_date DATE NOT NULL,
+  contract_duration_months INTEGER DEFAULT 12,
+  job_type TEXT NOT NULL,
+  target_count INTEGER NOT NULL,
+  current_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(clinic_id, job_type)
+);
+```
+
+#### guppy_scout_templates（GUPPYスカウト文面）
+
+```sql
+CREATE TABLE guppy_scout_templates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
+  template_name TEXT,
+  subject TEXT,
+  body TEXT,
+  link_cta_text TEXT,
+  used_from DATE,
+  used_to DATE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### jobmedley_scout_templates（ジョブメドレースカウト文面）
+
+```sql
+CREATE TABLE jobmedley_scout_templates (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
+  job_offer_id TEXT,
+  template_name TEXT,
+  first_sentence TEXT,
+  body TEXT,
+  target_criteria TEXT,
+  used_from DATE,
+  used_to DATE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### hires（採用決定記録）
+
+```sql
+CREATE TABLE hires (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
+  hire_date DATE NOT NULL,
+  job_type TEXT NOT NULL,
+  source TEXT NOT NULL,
+  channel TEXT,
+  name TEXT,
+  memo TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 12.5 既存テーブル拡張
+
+#### clinics テーブルに追加
+
+```sql
+ALTER TABLE clinics ADD COLUMN guppy_profile_completeness INTEGER;
+ALTER TABLE clinics ADD COLUMN guppy_independence_support BOOLEAN;
+ALTER TABLE clinics ADD COLUMN guppy_profile_updated_at TIMESTAMP WITH TIME ZONE;
+```
+
+#### jobmedley_job_offers テーブルに追加
+
+```sql
+ALTER TABLE jobmedley_job_offers ADD COLUMN has_speed_reply_badge BOOLEAN DEFAULT false;
+ALTER TABLE jobmedley_job_offers ADD COLUMN has_staff_voice BOOLEAN DEFAULT false;
+ALTER TABLE jobmedley_job_offers ADD COLUMN has_workplace_info BOOLEAN DEFAULT false;
+ALTER TABLE jobmedley_job_offers ADD COLUMN main_photo_url TEXT;
+ALTER TABLE jobmedley_job_offers ADD COLUMN title TEXT;
+```
+
+#### quacareer_scout_mails テーブルに追加
+
+```sql
+ALTER TABLE quacareer_scout_mails ADD COLUMN subject TEXT;
+ALTER TABLE quacareer_scout_mails ADD COLUMN first_sentence TEXT;
+ALTER TABLE quacareer_scout_mails ADD COLUMN sent_time TIME;
+ALTER TABLE quacareer_scout_mails ADD COLUMN is_scout_plus BOOLEAN DEFAULT false;
+ALTER TABLE quacareer_scout_mails ADD COLUMN application_count INTEGER DEFAULT 0;
+```
+
+---
+
+## 13. 開発マイルストーン（2026-01-01追加）
+
+### Phase A: 認証基盤【優先度：高】
+
+| タスク | 概要 | ステータス |
+|--------|------|-----------|
+| A-1 | `clinic_auth` テーブル作成 | 未着手 |
+| A-2 | クリニック別パスワード認証API実装 | 未着手 |
+| A-3 | 管理者認証API実装 | 未着手 |
+| A-4 | ログイン画面UI実装 | 未着手 |
+| A-5 | セッション管理（Cookie/JWT） | 未着手 |
+| A-6 | 認証ミドルウェア実装 | 未着手 |
+
+### Phase B: 目標採用人数管理【優先度：高】
+
+| タスク | 概要 | ステータス |
+|--------|------|-----------|
+| B-1 | `recruitment_goals` テーブル作成 | 未着手 |
+| B-2 | `hires` テーブル作成 | 未着手 |
+| B-3 | 目標設定API実装 | 未着手 |
+| B-4 | 採用決定登録API実装 | 未着手 |
+| B-5 | 進捗率計算ロジック実装 | 未着手 |
+| B-6 | 目標設定画面UI実装 | 未着手 |
+| B-7 | 進捗カード表示UI実装 | 未着手 |
+
+### Phase C: スカウト文面管理【優先度：高】
+
+| タスク | 概要 | ステータス |
+|--------|------|-----------|
+| C-1 | `guppy_scout_templates` テーブル作成 | 未着手 |
+| C-2 | `jobmedley_scout_templates` テーブル作成 | 未着手 |
+| C-3 | `quacareer_scout_mails` テーブル拡張 | 未着手 |
+| C-4 | 文面登録API実装 | 未着手 |
+| C-5 | 文面一覧API実装 | 未着手 |
+| C-6 | 文面管理画面UI実装 | 未着手 |
+| C-7 | ダッシュボードへの文面表示追加 | 未着手 |
+
+### Phase D: KPIアラート機能【優先度：高】
+
+| タスク | 概要 | ステータス |
+|--------|------|-----------|
+| D-1 | KPI閾値設定（定数定義） | 未着手 |
+| D-2 | アラート判定ロジック実装 | 未着手 |
+| D-3 | KPIサマリーカードUI実装 | 未着手 |
+| D-4 | アラート一覧UI実装 | 未着手 |
+| D-5 | テーブル数値の色付け実装 | 未着手 |
+| D-6 | 施策対応表の表示実装 | 未着手 |
+
+### Phase E: プロフィール・重要指標取得【優先度：中】
+
+| タスク | 概要 | ステータス |
+|--------|------|-----------|
+| E-1 | `clinics` テーブル拡張（GUPPY項目） | 未着手 |
+| E-2 | `jobmedley_job_offers` テーブル拡張 | 未着手 |
+| E-3 | GUPPYスクレイパー拡張 | 未着手 |
+| E-4 | ジョブメドレースクレイパー拡張 | 未着手 |
+| E-5 | 取得データの表示UI実装 | 未着手 |
+
+### Phase F: 管理者専用機能【優先度：中】
+
+| タスク | 概要 | ステータス |
+|--------|------|-----------|
+| F-1 | 全クリニック一覧画面 | 未着手 |
+| F-2 | パスワード管理画面 | 未着手 |
+| F-3 | 横断レポート画面（任意） | 未着手 |
+
+---
+
+## 14. 関連ドキュメント
+
+- [dashboard-strategy.md](./dashboard-strategy.md) - 戦略・KPI定義・施策対応表
+- [data-coverage-analysis.md](./data-coverage-analysis.md) - データ取得状況分析

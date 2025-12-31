@@ -80,16 +80,43 @@ CREATE TABLE IF NOT EXISTS jobmedley_analysis (
   UNIQUE(clinic_id, period_year, period_month)
 );
 
--- JobMedley スカウト送信数（日次）
+-- JobMedley スカウト送信数（日次）+ 日別メトリクス
 CREATE TABLE IF NOT EXISTS jobmedley_scouts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
   date DATE NOT NULL,
+  job_offer_id TEXT,                              -- 求人ID（NULLは全求人合算）
   sent_count INTEGER DEFAULT 0,
+  page_view_count INTEGER DEFAULT 0,              -- 求人詳細ページ閲覧数
+  application_count_total INTEGER DEFAULT 0,      -- 応募数（全応募）
+  scout_application_count INTEGER DEFAULT 0,      -- スカウト経由応募数
+  cum_scout_sent_count INTEGER DEFAULT 0,         -- 月間累計スカウト送信数
+  search_rank INTEGER,                            -- 求人掲載順位（NULLは圏外）
   scraped_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(clinic_id, date)
+  UNIQUE(clinic_id, job_offer_id, date)
+);
+
+-- JobMedley 求人マスタ（職種別サマリー）
+CREATE TABLE IF NOT EXISTS jobmedley_job_offers (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
+  job_offer_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  hire_count INTEGER DEFAULT 0,
+  application_count INTEGER DEFAULT 0,
+  scout_application_count INTEGER DEFAULT 0,
+  page_view_count INTEGER DEFAULT 0,
+  days_since_update INTEGER DEFAULT 0,
+  photo_count INTEGER DEFAULT 0,
+  feature_tags TEXT[] DEFAULT '{}',
+  scout_sent_count INTEGER DEFAULT 0,
+  search_url TEXT,
+  scraped_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(clinic_id, job_offer_id)
 );
 
 -- Quacareer ダッシュボード（日次）
@@ -137,6 +164,9 @@ CREATE INDEX IF NOT EXISTS idx_jobmedley_analysis_clinic_id ON jobmedley_analysi
 CREATE INDEX IF NOT EXISTS idx_jobmedley_analysis_period ON jobmedley_analysis(period_year, period_month);
 CREATE INDEX IF NOT EXISTS idx_jobmedley_scouts_clinic_id ON jobmedley_scouts(clinic_id);
 CREATE INDEX IF NOT EXISTS idx_jobmedley_scouts_date ON jobmedley_scouts(date);
+CREATE INDEX IF NOT EXISTS idx_jobmedley_scouts_job_offer ON jobmedley_scouts(job_offer_id);
+CREATE INDEX IF NOT EXISTS idx_jobmedley_job_offers_clinic ON jobmedley_job_offers(clinic_id);
+CREATE INDEX IF NOT EXISTS idx_jobmedley_job_offers_job_offer_id ON jobmedley_job_offers(job_offer_id);
 CREATE INDEX IF NOT EXISTS idx_quacareer_dashboard_clinic_id ON quacareer_dashboard(clinic_id);
 CREATE INDEX IF NOT EXISTS idx_quacareer_dashboard_date ON quacareer_dashboard(date);
 CREATE INDEX IF NOT EXISTS idx_quacareer_scout_mails_clinic_id ON quacareer_scout_mails(clinic_id);
@@ -186,6 +216,13 @@ CREATE TRIGGER update_jobmedley_scouts_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+-- jobmedley_job_offersテーブルの更新トリガー
+DROP TRIGGER IF EXISTS update_jobmedley_job_offers_updated_at ON jobmedley_job_offers;
+CREATE TRIGGER update_jobmedley_job_offers_updated_at
+  BEFORE UPDATE ON jobmedley_job_offers
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- quacareer_dashboardテーブルの更新トリガー
 DROP TRIGGER IF EXISTS update_quacareer_dashboard_updated_at ON quacareer_dashboard;
 CREATE TRIGGER update_quacareer_dashboard_updated_at
@@ -211,6 +248,7 @@ ALTER TABLE scout_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bitly_clicks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmedley_analysis ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jobmedley_scouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobmedley_job_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quacareer_dashboard ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quacareer_scout_mails ENABLE ROW LEVEL SECURITY;
 
@@ -247,6 +285,12 @@ CREATE POLICY "Service role can do everything on jobmedley_analysis"
 
 CREATE POLICY "Service role can do everything on jobmedley_scouts"
   ON jobmedley_scouts
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+CREATE POLICY "Service role can do everything on jobmedley_job_offers"
+  ON jobmedley_job_offers
   FOR ALL
   USING (true)
   WITH CHECK (true);
@@ -291,6 +335,11 @@ CREATE POLICY "Anonymous can read jobmedley_analysis"
 
 CREATE POLICY "Anonymous can read jobmedley_scouts"
   ON jobmedley_scouts
+  FOR SELECT
+  USING (true);
+
+CREATE POLICY "Anonymous can read jobmedley_job_offers"
+  ON jobmedley_job_offers
   FOR SELECT
   USING (true);
 

@@ -24,7 +24,44 @@ interface JobMedleyRankData {
   checkedAt: string;
 }
 
+// 新規: 日別データ型（8項目）
+interface DailyDataItem {
+  date: string;
+  scoutSentCount: number;
+  scoutApplicationCount: number;
+  scoutApplicationRate: number | null;
+  searchRank: number | null;
+  pageViewCount: number;
+  applicationCountJobPage: number;
+  jobPageApplicationRate: number | null;
+}
+
+// 新規: 求人リスト型
+interface JobOffer {
+  jobOfferId: string;
+  name: string;
+}
+
+// 新規: 求人サマリー型（8項目）
+interface JobOfferSummary {
+  jobOfferId: string;
+  name: string;
+  hireCount: number;
+  applicationCount: number;
+  scoutApplicationCount: number;
+  pageViewCount: number;
+  daysSinceUpdate: number;
+  photoCount: number;
+  featureTags: string[];
+  scoutSentCount: number;
+}
+
 interface JobMedleyData {
+  // 新規: 日別データ
+  dailyData?: DailyDataItem[];
+  summary?: JobOfferSummary | null;
+  jobOffers?: JobOffer[];
+  // 後方互換
   analysis: JobMedleyAnalysisData | null;
   scout: JobMedleyScoutData | null;
   rank: JobMedleyRankData | null;
@@ -46,6 +83,9 @@ export default function JobMedleyPage() {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [clinicId, setClinicId] = useState<string | null>(null);
+  // 新規: 求人選択用ステート（null = 全求人合算）
+  const [selectedJobOfferId, setSelectedJobOfferId] = useState<string | null>(null);
+  const [jobOffers, setJobOffers] = useState<JobOffer[]>([]);
 
   useEffect(() => {
     async function fetchClinicName() {
@@ -73,10 +113,19 @@ export default function JobMedleyPage() {
       setError(null);
 
       try {
-        const res = await fetch(`/api/jobmedley?year=${selectedYear}&month=${selectedMonth}&slug=${slug}`);
+        // job_offer_id パラメータを追加
+        let url = `/api/jobmedley?year=${selectedYear}&month=${selectedMonth}&slug=${slug}`;
+        if (selectedJobOfferId) {
+          url += `&job_offer_id=${selectedJobOfferId}`;
+        }
+        const res = await fetch(url);
         const json = await res.json().catch(() => null);
         if (res.ok) {
           setData(json);
+          // 求人リストを更新
+          if (json.jobOffers) {
+            setJobOffers(json.jobOffers);
+          }
         } else {
           setError(json?.error || 'データの取得に失敗しました');
         }
@@ -86,7 +135,7 @@ export default function JobMedleyPage() {
       setLoading(false);
     }
     fetchData();
-  }, [selectedYear, selectedMonth, slug]);
+  }, [selectedYear, selectedMonth, slug, selectedJobOfferId]);
 
   // データ取得後にscoutInputsを初期化
   useEffect(() => {
@@ -226,6 +275,31 @@ export default function JobMedleyPage() {
           </div>
         </div>
 
+        {/* 求人選択ドロップダウン */}
+        {jobOffers.length > 0 && (
+          <div className="mb-6">
+            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              求人（職種）を選択
+            </label>
+            <select
+              value={selectedJobOfferId || ''}
+              onChange={(e) => setSelectedJobOfferId(e.target.value || null)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isDark
+                  ? 'bg-slate-700 text-slate-300 border-slate-600'
+                  : 'bg-white text-slate-700 border-slate-300'
+              } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            >
+              <option value="">全求人合算</option>
+              {jobOffers.map((job) => (
+                <option key={job.jobOfferId} value={job.jobOfferId}>
+                  {job.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {loading ? (
           <div className={`rounded-lg shadow p-8 text-center ${isDark ? "bg-slate-800" : "bg-white"}`}>
             <div className="animate-pulse space-y-4">
@@ -240,8 +314,15 @@ export default function JobMedleyPage() {
           </div>
         ) : data ? (
           <>
-            {/* 分析データサマリー */}
-            {data.analysis && (
+            {/* 求人サマリーカード（求人選択時のみ表示） */}
+            {data.summary && (
+              <div className="mb-8">
+                <JobOfferSummaryCard summary={data.summary} isDark={isDark} />
+              </div>
+            )}
+
+            {/* 分析データサマリー（求人未選択時または後方互換） */}
+            {!data.summary && data.analysis && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <SummaryCard
                   title="採用決定数"
@@ -267,6 +348,20 @@ export default function JobMedleyPage() {
                   color="orange"
                   isDark={isDark}
                 />
+              </div>
+            )}
+
+            {/* 日別データテーブル（8項目） */}
+            {data.dailyData && data.dailyData.length > 0 && (
+              <div className={`rounded-lg shadow mb-8 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-200"}`}>
+                  <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                    日別データ（{selectedYear}年{selectedMonth}月）
+                  </h2>
+                </div>
+                <div className="p-4">
+                  <DailyDataTable dailyData={data.dailyData} isDark={isDark} />
+                </div>
               </div>
             )}
 
@@ -426,6 +521,149 @@ function SummaryCard({
       <p className={`text-2xl font-bold mt-1 ${classes.text}`}>
         {value.toLocaleString()}
       </p>
+    </div>
+  );
+}
+
+// 日別データテーブルコンポーネント（8項目×31行）
+function DailyDataTable({
+  dailyData,
+  isDark,
+}: {
+  dailyData: DailyDataItem[];
+  isDark: boolean;
+}) {
+  // 率を表示用にフォーマット（ゼロ除算時は「—」）
+  const formatRate = (rate: number | null): string => {
+    if (rate === null) return '—';
+    return `${(rate * 100).toFixed(1)}%`;
+  };
+
+  // 検索順位を表示用にフォーマット
+  const formatRank = (rank: number | null): string => {
+    if (rank === null) return '—';
+    return `${rank}位`;
+  };
+
+  const headerClass = `px-3 py-2 text-xs font-medium text-left ${
+    isDark ? 'text-slate-400 bg-slate-700/50' : 'text-slate-600 bg-slate-100'
+  }`;
+  const cellClass = `px-3 py-2 text-sm ${
+    isDark ? 'text-slate-300' : 'text-slate-700'
+  }`;
+  const borderClass = isDark ? 'border-slate-700' : 'border-slate-200';
+
+  return (
+    <div className="overflow-x-auto">
+      <table className={`w-full border-collapse border ${borderClass}`}>
+        <thead>
+          <tr>
+            <th className={`${headerClass} border ${borderClass}`}>日付</th>
+            <th className={`${headerClass} border ${borderClass}`}>送信数</th>
+            <th className={`${headerClass} border ${borderClass}`}>スカウト経由応募</th>
+            <th className={`${headerClass} border ${borderClass}`}>スカウト応募率</th>
+            <th className={`${headerClass} border ${borderClass}`}>検索順位</th>
+            <th className={`${headerClass} border ${borderClass}`}>閲覧数</th>
+            <th className={`${headerClass} border ${borderClass}`}>求人ページ経由応募</th>
+            <th className={`${headerClass} border ${borderClass}`}>求人ページ応募率</th>
+          </tr>
+        </thead>
+        <tbody>
+          {dailyData.length === 0 ? (
+            <tr>
+              <td colSpan={8} className={`${cellClass} text-center py-8`}>
+                データがありません
+              </td>
+            </tr>
+          ) : (
+            dailyData.map((row) => {
+              const date = new Date(row.date);
+              const dayOfWeek = date.getDay();
+              const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+              const dateDisplay = `${date.getMonth() + 1}/${date.getDate()}(${dayNames[dayOfWeek]})`;
+              const rowBg = dayOfWeek === 0
+                ? isDark ? 'bg-red-900/10' : 'bg-red-50/50'
+                : dayOfWeek === 6
+                  ? isDark ? 'bg-blue-900/10' : 'bg-blue-50/50'
+                  : '';
+
+              return (
+                <tr key={row.date} className={rowBg}>
+                  <td className={`${cellClass} border ${borderClass} font-medium`}>{dateDisplay}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{row.scoutSentCount}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{row.scoutApplicationCount}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{formatRate(row.scoutApplicationRate)}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{formatRank(row.searchRank)}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{row.pageViewCount}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{row.applicationCountJobPage}</td>
+                  <td className={`${cellClass} border ${borderClass} text-right`}>{formatRate(row.jobPageApplicationRate)}</td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// 求人サマリーカードコンポーネント（8項目）
+function JobOfferSummaryCard({
+  summary,
+  isDark,
+}: {
+  summary: JobOfferSummary;
+  isDark: boolean;
+}) {
+  const cardBg = isDark ? 'bg-slate-800' : 'bg-white';
+  const borderColor = isDark ? 'border-slate-700' : 'border-slate-200';
+  const labelColor = isDark ? 'text-slate-400' : 'text-slate-500';
+  const valueColor = isDark ? 'text-slate-100' : 'text-slate-800';
+
+  const items = [
+    { label: '採用決定数', value: summary.hireCount, color: 'text-green-600' },
+    { label: '応募数', value: summary.applicationCount, color: 'text-blue-600' },
+    { label: 'スカウト経由応募数', value: summary.scoutApplicationCount, color: 'text-purple-600' },
+    { label: '閲覧数', value: summary.pageViewCount, color: 'text-orange-600' },
+    { label: '原稿更新からの日数', value: `${summary.daysSinceUpdate}日`, color: 'text-slate-600' },
+    { label: '写真枚数', value: `${summary.photoCount}枚`, color: 'text-slate-600' },
+    { label: 'スカウト送信数', value: summary.scoutSentCount, color: 'text-indigo-600' },
+  ];
+
+  return (
+    <div className={`rounded-lg shadow ${cardBg} border ${borderColor}`}>
+      <div className={`px-6 py-4 border-b ${borderColor}`}>
+        <h3 className={`text-lg font-semibold ${valueColor}`}>{summary.name}</h3>
+      </div>
+      <div className="p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          {items.map((item, idx) => (
+            <div key={idx} className={`rounded-lg p-3 ${isDark ? 'bg-slate-700/30' : 'bg-slate-50'}`}>
+              <p className={`text-xs ${labelColor}`}>{item.label}</p>
+              <p className={`text-lg font-bold mt-1 ${item.color}`}>
+                {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}
+              </p>
+            </div>
+          ))}
+        </div>
+        {summary.featureTags.length > 0 && (
+          <div>
+            <p className={`text-xs ${labelColor} mb-2`}>特徴タグ</p>
+            <div className="flex flex-wrap gap-2">
+              {summary.featureTags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  className={`px-2 py-1 text-xs rounded ${
+                    isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
