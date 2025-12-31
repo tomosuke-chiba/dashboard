@@ -15,6 +15,8 @@ export interface Clinic {
   guppy_search_url: string | null;
   jobmedley_login_id: string | null;
   jobmedley_password: string | null;
+  jobmedley_clinic_name: string | null;
+  jobmedley_search_url: string | null;
   quacareer_login_id: string | null;
   quacareer_password: string | null;
   bitly_url: string | null;

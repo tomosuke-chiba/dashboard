@@ -5,7 +5,7 @@
 **プロジェクト名**: 求人媒体ダッシュボード
 **クライアント**: 株式会社KOU
 **作成日**: 2024年12月29日
-**最終更新日**: 2025年12月30日
+**最終更新日**: 2025年12月31日
 
 ---
 
@@ -87,15 +87,15 @@
 
 | 機能 | 詳細 | ステータス |
 |------|------|------------|
-| 検索順位取得 | 検索順位の上位化が最重要 | 未実装 |
-| スカウトメール返信率 | 月100通無料スカウトの効果計測 | 未実装 |
+| 検索順位取得 | 検索順位の上位化が最重要 | ✅実装済み（検索URL設定時） |
+| スカウトメール効果指標 | 月100通無料スカウトの効果計測 | 一部実装（送信数・スカウト経由応募数） |
 | 職種別データ | クリニックごとに異なる職種を出稿 | 未実装 |
 
 ### Phase 3: クオキャリア対応
 
 | 機能 | 詳細 | ステータス |
 |------|------|------------|
-| スカウトメール開封率 | プラットフォームから取得可能 | 未実装 |
+| スカウトメール開封率 | プラットフォームから取得可能 | ✅実装済み（開封率のみ） |
 | スカウトメール返信率 | どのスカウト文面が効果的か最適化 | 未実装 |
 
 ---
@@ -144,6 +144,15 @@
 | 検索順位 | **最重要** | 閲覧無料のため、順位上位化が命題 |
 | スカウトメール返信率 | 重要 | 月100通無料、競合優位性は低い |
 
+**現状取得できている指標:**
+- 分析: 採用決定数 / 応募数 / スカウト経由応募数 / 求人詳細ページ閲覧数
+- スカウト送信数（ダッシュボードで日別手入力に切り替え予定）
+- 検索順位（`jobmedley_search_url` 設定時）
+
+**取得方針:**
+- 分析データは `https://customers.job-medley.com/customers/analysis` の期間選択で該当月を指定して取得
+- スカウト送信数はダッシュボードから日付ごとに手入力
+
 ### 4.3 クオキャリア
 
 | 項目 | 重要度 | 備考 |
@@ -151,6 +160,10 @@
 | スカウトメール開封率 | 重要 | プラットフォームから取得可能 |
 | スカウトメール返信率 | 重要 | どの文面が効果的か最適化 |
 | プロフィール変更 | - | **不可**（唯一変更できない媒体） |
+
+**現状取得できている指標:**
+- ダッシュボードサマリー（累計応募者数 / お気に入り登録者数 / 開封率）
+- スカウトメール一覧（配信日時 / 対象職種 / 文面 / 配信件数 / 開封率）
 
 ---
 
@@ -191,6 +204,8 @@
 | guppy_search_url | TEXT | 検索順位チェック用の地区URL |
 | jobmedley_login_id | TEXT | ジョブメドレーログインID |
 | jobmedley_password | TEXT | ジョブメドレーパスワード |
+| jobmedley_clinic_name | TEXT | ジョブメドレー上の医院名（検索順位マッチング用） |
+| jobmedley_search_url | TEXT | ジョブメドレー検索順位チェック用の検索URL |
 | quacareer_login_id | TEXT | クオキャリアログインID |
 | quacareer_password | TEXT | クオキャリアパスワード |
 | **bitly_url** | TEXT | **Bitly短縮URL（新規追加）** |
@@ -245,6 +260,60 @@
 
 **ユニーク制約: clinic_id + date**
 
+#### jobmedley_analysis（ジョブメドレー月次分析）
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| clinic_id | UUID | クライアントID |
+| period_year | INTEGER | 対象年 |
+| period_month | INTEGER | 対象月 |
+| hire_count | INTEGER | 採用決定数 |
+| application_count | INTEGER | 応募数 |
+| scout_application_count | INTEGER | スカウト経由応募数 |
+| page_view_count | INTEGER | 求人詳細ページ閲覧数 |
+| scraped_at | TIMESTAMP | 取得日時 |
+
+**ユニーク制約: clinic_id + period_year + period_month**
+
+#### jobmedley_scouts（ジョブメドレースカウト送信数）
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| clinic_id | UUID | クライアントID |
+| date | DATE | 取得日 |
+| sent_count | INTEGER | 送信数（手入力） |
+| scraped_at | TIMESTAMP | 更新日時 |
+
+**ユニーク制約: clinic_id + date**
+
+#### quacareer_dashboard（クオキャリアダッシュボード）
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| clinic_id | UUID | クライアントID |
+| date | DATE | 取得日 |
+| total_applicants | INTEGER | 累計応募者数 |
+| favorites_dh | INTEGER | お気に入り登録者数（歯科衛生士） |
+| favorites_dr | INTEGER | お気に入り登録者数（歯科医師） |
+| scout_mail_open_rate | DOUBLE PRECISION | スカウトメール平均開封率 |
+| scout_plus_open_rate | DOUBLE PRECISION | スカウトプラス平均開封率 |
+| scraped_at | TIMESTAMP | 取得日時 |
+
+**ユニーク制約: clinic_id + date**
+
+#### quacareer_scout_mails（クオキャリアスカウト一覧）
+
+| カラム | 型 | 説明 |
+|--------|-----|------|
+| clinic_id | UUID | クライアントID |
+| scraped_date | DATE | 取得日 |
+| delivery_date | TEXT | 配信日時 |
+| target_job_type | TEXT | 対象職種 |
+| message | TEXT | メッセージ |
+| delivery_count | INTEGER | 配信件数 |
+| open_rate | DOUBLE PRECISION | 開封率 |
+| scraped_at | TIMESTAMP | 取得日時 |
+
 ---
 
 ## 8. 現状の実装状況
@@ -257,6 +326,9 @@
 - [x] Discord通知（新規応募時）
 - [x] 履歴データ保存・月別表示
 - [x] 17クリニック登録済み
+- [x] ジョブメドレー スクレイパー/ダッシュボード（分析・検索順位）
+- [x] クオキャリア スクレイパー/ダッシュボード（サマリー・スカウト一覧）
+- [x] ジョブメドレー/クオキャリアのデータをDB保存してUIに反映
 
 ### 8.2 Phase 1 実装済み
 
@@ -268,8 +340,10 @@
 
 ### 8.3 未実装（Phase 2以降）
 
-- [ ] ジョブメドレー連携
-- [ ] クオキャリア連携
+- [ ] ジョブメドレー職種別データ対応
+- [ ] ジョブメドレーのスカウト送信数（ダッシュボード日別手入力UI）
+- [ ] ジョブメドレーのスカウト返信数取得
+- [ ] クオキャリアの開封数/返信数取得・DB保存
 - [ ] 残り6職種の対応
 - [ ] 全クリニック×全職種の集計ダッシュボード
 
@@ -283,8 +357,8 @@
 /clinic                     → クライアント一覧
 /clinic/[slug]              → クライアント別サマリー
 /clinic/[slug]/guppy        → GUPPYダッシュボード（職種別タブ追加予定）
-/clinic/[slug]/job-medley   → ジョブメドレーダッシュボード（Coming Soon）
-/clinic/[slug]/quacareer    → クオキャリアダッシュボード（Coming Soon）
+/clinic/[slug]/job-medley   → ジョブメドレーダッシュボード（実装済み）
+/clinic/[slug]/quacareer    → クオキャリアダッシュボード（実装済み）
 /api/scrape                 → スクレイピング実行API
 /api/clinics                → クライアント一覧API
 /api/clinics/[slug]         → クライアント詳細API
@@ -329,3 +403,5 @@ BITLY_ACCESS_TOKEN          # 新規追加
 | 2024-12-29 | 初版作成 |
 | 2024-12-29 | GUPPY取得項目を8項目に確定 |
 | 2025-12-30 | 大幅更新: 職種別対応、スカウトメール機能、Bitly連携、閲覧率アラート、3媒体の詳細要件追加 |
+| 2025-12-31 | ジョブメドレー/クオキャリアの実装状況と設定項目を更新 |
+| 2025-12-31 | ジョブメドレーのスカウト送信数を日別手入力に変更 |

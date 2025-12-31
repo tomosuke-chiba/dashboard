@@ -47,7 +47,10 @@ Notion案件進捗ダッシュボード（/dashboard/sales）の集計・可視�
 - [ ] 追加機能検討中（ユーザーフィードバック待ち）
 
 **次回のDB適用**
-- [ ] マイグレーション実行: `supabase/migrations/002_add_bitly_links_table.sql`
+- [x] マイグレーション実行: `supabase/migrations/002_add_bitly_links_table.sql` ✅ 完了（2025-12-31）
+- [ ] マイグレーション実行: `supabase/migrations/003_add_jobmedley_search_fields.sql`
+- [ ] マイグレーション実行: `supabase/migrations/004_add_jobmedley_quacareer_tables.sql`
+- [ ] マイグレーション実行: `supabase/migrations/005_add_jobmedley_credentials.sql`
 
 **Bitly URL命名規則での運用開始**
 - 命名規則: `bit.ly/{クリニックslug}-{媒体}-{ID}`
@@ -73,8 +76,13 @@ curl -X POST http://localhost:3000/api/scrape -H "Authorization: Bearer ${CRON_S
 
 ### 関連コマンド
 ```bash
-# スクレイピング手動実行
+# スクレイピング手動実行（全媒体）
 curl -X POST http://localhost:3000/api/scrape -H "Authorization: Bearer ${CRON_SECRET}"
+
+# 媒体別スクレイピング
+curl -X POST "http://localhost:3000/api/scrape?source=guppy" -H "Authorization: Bearer ${CRON_SECRET}"
+curl -X POST "http://localhost:3000/api/scrape?source=jobmedley" -H "Authorization: Bearer ${CRON_SECRET}"
+curl -X POST "http://localhost:3000/api/scrape?source=quacareer" -H "Authorization: Bearer ${CRON_SECRET}"
 
 # Notionダッシュボード集計
 curl http://localhost:3000/api/dashboard/summary?year=2026&month=0
@@ -111,11 +119,11 @@ npm run dev
 <!-- AUTO-UPDATED-START -->
 | Key | Value |
 |-----|-------|
-| Node | not installed |
-| npm | not installed |
+| Node | v25.2.1 |
+| npm | 11.6.2 |
 | Branch | main |
-| Last Commit | 493e75d guppy要件定義変更 |
-| Updated | 2025-12-31 14:39:49 |
+| Last Commit | ec6387f feat: Notion案件進捗ダッシュボード完成 |
+| Updated | 2025-12-31 19:31:47 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
