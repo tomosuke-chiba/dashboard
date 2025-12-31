@@ -1,0 +1,2147 @@
+<!DOCTYPE html><html lang="ja" style="height: auto; min-height: 100%;"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="content-language" content="ja">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>スカウトメール結果</title>
+
+    <link rel="icon" type="image/x-icon" href="https://customer.quacareer.com/img/favicon.ico?v=202512031743">
+
+    <!-- Google Tag Manager -->
+    <script type="text/javascript" async="" src="//munchkin.marketo.net/164/munchkin.js"></script><script type="text/javascript" async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-MYLN782JW7&amp;cx=c&amp;gtm=4e5ca1"></script><script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-NQR768B"></script><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NQR768B');</script>
+    <!-- End Google Tag Manager -->
+
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="https://customer.quacareer.com/vendor/adminlte/vendor/bootstrap/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://customer.quacareer.com/vendor/adminlte/vendor/font-awesome/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://customer.quacareer.com/vendor/adminlte/vendor/Ionicons/css/ionicons.min.css">
+
+    <!-- icheck -->
+
+
+
+            <!-- Select2 -->
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.css">
+    
+    <!-- Theme style -->
+    <link rel="stylesheet" href="https://customer.quacareer.com/vendor/adminlte/dist/css/AdminLTE.min.css">
+
+        <link rel="stylesheet" href="https://customer.quacareer.com/vendor/adminlte/dist/css/skins/skin-blue.min.css ">
+        <link rel="stylesheet" href="https://customer.quacareer.com/css/custom.css?v=20250515">
+    <style>
+    .auto-reply_tag {
+        max-width: max-content;
+        color: #3C8DBC;
+        background-color: #EFF5F8;
+        border: 1px solid #3C8DBC;
+        border-radius: 4px;
+        font-size: 0.9em;
+        letter-spacing: 0.05em;
+        line-height: 1.7em;
+        padding: 0 0.3em;
+        margin-bottom: 0.1em;
+    }
+
+    .label{
+        font-size: 80% !important;
+        line-height: 1.5 !important;
+    }
+    @media (min-width: 768px){
+        .modal-dialog {
+            width: 650px;
+            margin: 30px auto;
+        }
+        #detail-introduction{
+            height:60px!important;
+        }
+
+    }
+
+    @media (max-width: 767px){
+        #detail-introduction{
+            height:5.3em!important;
+            font-size: 1em;
+        }
+    }
+
+    .modal .modal-content {
+    overflow-y: initial !important
+    }
+    .modal .modal-body {
+    max-height: calc(100vh - 20em);
+    overflow-y:auto;
+    }
+
+    .cancel-tr{
+        background-color:#888888 !important;
+    }
+    .login-width {
+        width:6.5em;
+    }
+    .kensuu-width {
+        width:4em;
+    }
+    .shokushu-width-2 {
+        width: 6em!important;
+        min-width: 6em!important;
+    }
+    .date-width {
+        width:4em;
+        min-width:4em;
+    }
+    .rate-width {
+        min-width:4.5em!important;
+        max-width:4.5em!important;
+    }
+    .info-width {
+        min-width:3em!important;
+        max-width:3em!important;
+    }
+
+    #detail-mail_body {
+        height:auto;
+        overflow-y: scroll;
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    #dataTable .vertical_middle {
+        vertical-align: middle;
+    }
+
+
+    @media (min-width: 768px) {
+        .modal-footer.no-border {
+            padding-top: 0;
+        }
+    }
+    </style>
+
+        <style>
+    </style>
+    <link rel="stylesheet" href="https://customer.quacareer.com/css/sp-custom.css?v=20240116">
+    <link rel="stylesheet" href="https://customer.quacareer.com/css/bootstrap-override.css?v=20240515">
+
+    <!-- Theme renewal style -->
+    <link rel="stylesheet" href="https://customer.quacareer.com/css/renewal.css?v=20251225">
+    <link rel="stylesheet" href="https://customer.quacareer.com/css/renewal_sp.css?v=20250318">
+
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Google Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+
+<script type="text/javascript" async="" src="//munchkin.marketo.net/munchkin.js"></script><style type="text/css">/* Chart.js */
+@-webkit-keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}@keyframes chartjs-render-animation{from{opacity:0.99}to{opacity:1}}.chartjs-render-monitor{-webkit-animation:chartjs-render-animation 0.001s;animation:chartjs-render-animation 0.001s;}</style></head>
+<body class="page skin-blue sidebar-mini" style="height: auto; min-height: 100%;">
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NQR768B"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+    <div class="wrapper app" style="height: auto; min-height: 100%;">
+
+        <!-- Main Header -->
+        <header class="main-header">
+                        <!-- Logo -->
+            <div class="header-spece">
+                <div></div>
+            </div>
+            <div class="logo">
+                <a href="https://customer.quacareer.com/home">
+                    <!-- mini logo for sidebar mini 50x50 pixels -->
+                    <span class="logo-mini"><img src="/img/q.svg"></span>
+                    <!-- logo for regular state and mobile devices -->
+                    <span class="logo-lg"><img src="/img/quacareer.svg"> </span>
+
+                    <span class="subtitle">医院向け管理画面</span>
+                </a>
+            </div>
+            <div class="login-info-for-pc">ログイン中:医療法人社団SDC</div>
+            <!-- Header Navbar -->
+            <nav class="navbar navbar-static-top" role="navigation">
+                <!-- Sidebar toggle button-->
+                                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                    <span class="sr-only">Toggle navigation</span>
+                </a>
+                                            <!-- Content Header (Page header) -->
+                <div class="smp_heightnone header-height">
+
+                <section class="content-header">
+                      <h1><i class="fa fa-envelope"></i>スカウトメール結果</h1>
+                </section>
+
+                <!-- Navbar Right Menu -->
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                      <!-- Notifications: style can be found in dropdown.less -->
+                        <li class="for-pc">
+                            <a href="#" class="useful-tool">
+                                <i class="icon-tool_icon"></i>
+                                <span class=""> お役立ちコンテンツ</span>
+                            </a>
+                            <ul class="sub-menu">
+                                <li>
+                                    <a href="https://customer.quacareer.com/saiyou_document">
+                                        <i class="fa fa-file-text-o"></i>
+                                        <span class=""> 採用書式ダウンロード</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://customer.quacareer.com/banner/list">
+                                        <i class="icon-image_icon"></i>
+                                        <span>求人ページリンクバナー</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="for-pc">
+                            <a href="https://manual.quacareer.com/customer-system" target="_blank">
+                                <i class="icon-manual-icon"></i>
+                                <span class=""> ご利用マニュアル</span>
+                            </a>
+                        </li>
+                        <li class="logout-button">
+                                                            <a href="#" onclick="if(confirm('ログアウトします。よろしいですか？')){ event.preventDefault(); document.getElementById('logout-form').submit();}">
+                                    <i class="fa fa-fw fa-power-off"></i>
+                                    <span class="for-pc"> ログアウト</span>
+                                    <span class="for-sp"></span>
+                                </a>
+                                <form id="logout-form" action="https://customer.quacareer.com/logout" method="POST" style="display: none;">
+                                                                        <input type="hidden" name="_token" value="cbi1YXO6tIfmvujjXsO1EXI1u5tzAjApcp1Awk07" style="">
+                                </form>
+                                                    </li>
+                    </ul>
+                </div>
+
+                </div>
+                
+                <div class="latest-announcement-container-for-pc">
+                    <div class="latest-announcement-container">
+    <div class="latest-announcement-block">
+        <div class="latest-announcement-content-for-pc">
+            <div class="latest-announcement-info">
+                <span class="latest-announcement-label">最新のお知らせ</span>
+                                    <span class="latest-announcement-date">
+                    2025.09.11
+                    </span>
+                    <span class="latest-announcement-title-container">
+                        <a class="latest-announcement-title" href="https://customer.quacareer.com/announcement/32/detail">
+                            スカウト／スカウトプラスのメッセージ内容確認画面に新機能を追加いたしました
+                        </a>
+                    </span>
+                            </div>
+                            <a class="btn announcement-link" href="https://customer.quacareer.com/announcement/list">
+                    <i class="fa fa-list-ul"></i> お知らせ一覧 ›
+                </a>
+                    </div>
+
+        <div class="latest-announcement-content-for-sp">
+            <div class="latest-announcement-label-list-sp">
+                <span class="latest-announcement-label-sp">最新のお知らせ</span>
+                                    <a class="btn announcement-link" href="https://customer.quacareer.com/announcement/list">
+                        <i class="fa fa-list-ul"></i> お知らせ一覧 ›
+                    </a>
+                            </div>
+            <div class="latest-announcement-date-info-sp">
+                                    <span class="latest-announcement-date">
+                    2025.09.11
+                    </span>
+                    <span class="latest-announcement-title-container">
+                          <a class="latest-announcement-title" href="https://customer.quacareer.com/announcement/32/detail">
+                              スカウト／スカウトプラスのメッセージ内容確認画面に新機能を追加いたしました
+                          </a>
+                    </span>
+                            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .latest-announcement-container {
+        /* position: absolute; */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        margin-top: 5px;
+        margin-bottom: 18px;
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+
+    .latest-announcement-block {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .latest-announcement-content-for-pc {
+        width: 100%;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: white;
+        white-space: nowrap;
+    }
+
+    .latest-announcement-content-for-sp {
+        display: none;
+    }
+
+    .latest-announcement-label {
+        padding-left: 10px;
+        padding-right: 10px;
+        height: 36px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #C82063;
+        color: white;
+        margin-right: 0;
+        position: relative;
+    }
+
+    .latest-announcement-label::after {
+        content: "";
+        position: absolute;
+        right: -17.2px;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        width: 0;
+        height: 100%;
+        border-top: 18px solid transparent;
+        border-bottom: 18px solid transparent;
+        border-left: 18px solid #C82063;
+    }
+
+    .latest-announcement-info {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    .latest-announcement-none {
+        display: inline-block;
+        margin-right: 10px;
+        margin-left: 20px;
+        position: relative;
+        padding-right: 10px;
+    }
+
+    .latest-announcement-date {
+        font-size: 1em;
+        display: inline-block;
+        margin-right: 10px;
+        margin-left: 20px;
+        vertical-align: middle;
+        color: #333;
+        position: relative;
+        padding-right: 10px;
+    }
+
+    .latest-announcement-date::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 16px;
+        background-color: #CCCCCC;
+    }
+
+    .latest-announcement-title-container {
+        display: block;
+        align-items: center;
+        height: unset;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    .latest-announcement-title {
+        font-size: 1em;
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        max-width: 100%;
+        flex-grow: 1;
+        cursor: pointer;
+    }
+
+    .announcement-link {
+        color: #4BA2C8;
+        background-color: #DDE8F3;
+        border: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        height: 90%;
+        white-space: nowrap;
+    }
+
+    .announcement-link:hover {
+        background-color: #D0E0ED;
+        color: #3792A4;
+        border: 2px solid transparent;
+    }
+
+    @media  only screen and (max-width: 1199px) {
+        .latest-announcement-container {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .latest-announcement-content-for-pc {
+            display: none;
+        }
+
+        .latest-announcement-content-for-sp {
+            padding:0.15em;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            white-space: nowrap;
+        }
+
+        .latest-announcement-container {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            width: auto;
+        }
+
+        .latest-announcement-label-list-sp {
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .latest-announcement-label-sp, .btn.announcement-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+            height: 90%;
+        }
+
+        .latest-announcement-label-sp {
+            padding: 0 0.4em;
+            line-height: 1.6em;
+            font-size: 0.8em;
+            margin-left: 2px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #C82063;
+            color: white;
+            position: relative;
+        }
+
+        .latest-announcement-date-info-sp {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .latest-announcement-date {
+            float: left;
+            margin-left: 5px;
+        }
+
+        .latest-announcement-title {
+            vertical-align: middle;
+        }
+
+        .btn.announcement-link {
+            font-size: 0.8em;
+            margin-right: 2px;
+            text-align: right;
+            flex-shrink: 0;
+            padding: 0 8px;
+        }
+
+        .latest-announcement-none {
+            float: left;
+            margin-left: 5px;
+        }
+    }
+
+    @media  only screen and (max-width: 767px) and (min-width: 600px) {
+        .latest-announcement-container {
+            margin-bottom: -1em;
+        }
+    }
+
+    @media  only screen and (max-width: 767px) {
+        .latest-announcement-date,
+        .latest-announcement-title{
+            font-size:0.9em
+        }
+    }
+</style>
+                </div>
+
+            </nav>
+        </header>
+
+                <!-- Left side column. contains the logo and sidebar -->
+        <aside class="main-sidebar">
+            <div class="logo">
+                <a href="https://customer.quacareer.com/home">
+                    <!-- mini logo for sidebar mini 50x50 pixels -->
+                    <span class="logo-mini"><img src="/img/q.svg"></span>
+                    <!-- logo for regular state and mobile devices -->
+                    <span class="logo-lg"><img src="/img/quacareer.svg"> </span>
+
+                    <span class="subtitle">医院向け管理画面</span>
+                </a>
+            </div>
+            <!-- sidebar: style can be found in sidebar.less -->
+            <section class="sidebar" style="height: auto;">
+                <div class="sidebar-line">
+                </div>
+                <!-- Sidebar Menu -->
+                <ul class="sidebar-menu tree" data-widget="tree">
+                    <li class="">
+                    <a href="https://customer.quacareer.com">
+                <i class="fa fa-fw fa-dashboard "></i>
+        
+            <span>ダッシュボード</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/apply/list">
+                <i class="fa fa-fw fa-file-text "></i>
+        
+            <span>メッセージ一覧</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/applicant/list">
+                <i class="fa fa-fw fa-fas fa-address-book "></i>
+        
+            <span>応募者一覧</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/jobPosting/list">
+                <i class="fa fa-fw fa-list-alt "></i>
+        
+            <span>掲載求人一覧</span>
+                    </a>
+            </li>
+<li class="active treeview active menu-open">
+            <a href="#">
+                <i class="fa fa-fw fa-envelope "></i>
+        
+            <span>スカウトメール</span>
+                            <span class="pull-right-container">
+                </span>
+                    </a>
+                    <ul class="treeview-menu">
+                <li class="">
+            <a href="https://customer.quacareer.com/scout/createmail">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>スカウトメール作成</span>
+                    </a>
+            </li>
+<li class="active">
+            <a href="https://customer.quacareer.com/scout/maillist">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>スカウトメール結果</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/template/list">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>テンプレート管理</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/to_newec/scout" target="_self">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>スカウト利用権購入</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/scout_autoreply/create">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>お気に入り自動返信設定</span>
+                    </a>
+            </li>
+            </ul>
+            </li>
+<li class="treeview">
+            <a href="#">
+                <i class="fa fa-fw fa-envelope plus_icon "></i>
+        
+            <span>スカウトプラス</span>
+                            <span class="pull-right-container">
+                </span>
+                    </a>
+                    <ul class="treeview-menu">
+                <li class="">
+            <a href="https://customer.quacareer.com/offer/createmail">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>スカウトプラス作成</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/offer/maillist">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>スカウトプラス結果</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/offerTemplate/list">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>テンプレート管理</span>
+                    </a>
+            </li>
+            </ul>
+            </li>
+<li class="treeview">
+            <a href="#">
+                <i class="fa fa-fw fa-pie-chart "></i>
+        
+            <span>適性診断【DeCode】</span>
+                            <span class="pull-right-container">
+                </span>
+                    </a>
+                    <ul class="treeview-menu">
+                <li class="">
+            <a href="https://customer.quacareer.com/assessment/request">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>受検依頼</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/answer/list">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>診断結果</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/userights/list">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>利用権一覧</span>
+                    </a>
+            </li>
+            </ul>
+            </li>
+<li class="treeview">
+            <a href="#">
+                <i class="icon-careerfair_icon"></i>
+        
+            <span>説明会</span>
+                            <span class="pull-right-container">
+                </span>
+                    </a>
+                    <ul class="treeview-menu">
+                <li class="">
+            <a href="https://customer.quacareer.com/careerfair/create">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>説明会情報登録</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/careerfair/list">
+                <i class="fa fa-fw fa- "></i>
+        
+            <span>説明会一覧</span>
+                    </a>
+            </li>
+            </ul>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/useService/list">
+                <i class="fa fa-fw fa-th-list "></i>
+        
+            <span>利用サービス一覧</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/user/details">
+                <i class="fa fa-fw fa-user "></i>
+        
+            <span>登録情報編集</span>
+                    </a>
+            </li>
+<li class="">
+            <a href="https://customer.quacareer.com/user/password_details">
+                <i class="fa fa-fw fa-lock "></i>
+        
+            <span>パスワード変更</span>
+                    </a>
+            </li>
+                                            <li class="treeview for-sp">
+                                                <a href="#">
+                                <i class="icon-tool_icon"></i>
+                                <span>お役立ちコンテンツ</span>
+                                <span class="pull-right-container"></span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li class="">
+                                    <a href="https://customer.quacareer.com/saiyou_document">
+                                        <i class="fa fa-fw fa- "></i>
+                                        <span>採用書式ダウンロード</span>
+                                    </a>
+                                </li>
+                                <li class="">
+                                    <a href="https://customer.quacareer.com/banner/list">
+                                        <i class="fa fa-fw fa- "></i>
+                                        <span>求人ページリンクバナー</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                                            <li class="manual for-sp">
+                                                        <a href="https://manual.quacareer.com/customer-system" target="_blank">
+                                <i class="fa icon-manual-icon"></i>
+                                <span>ご利用マニュアル</span>
+                                <span class="pull-right-container"></span>
+                            </a>
+                        </li>
+                </ul>
+                <!-- /.sidebar-menu -->
+            </section>
+            <!-- /.sidebar -->
+        </aside>
+        
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper" style="min-height: 922.641px;">
+            
+
+            <!-- Main content -->
+            <section class="content">
+                <!-- Content Header (Page header) -->
+                <div class="header-for-sp">
+                    <div class="login-info-for-sp">ログイン中:医療法人社団SDC</div>
+                    <section class="content-header for-sp">
+                          <h1><i class="fa fa-envelope"></i>スカウトメール結果</h1>
+                    </section>
+                </div>
+                <div class="latest-announcement-container-for-sp">
+                    <div class="latest-announcement-container">
+    <div class="latest-announcement-block">
+        <div class="latest-announcement-content-for-pc">
+            <div class="latest-announcement-info">
+                <span class="latest-announcement-label">最新のお知らせ</span>
+                                    <span class="latest-announcement-date">
+                    2025.09.11
+                    </span>
+                    <span class="latest-announcement-title-container">
+                        <a class="latest-announcement-title" href="https://customer.quacareer.com/announcement/32/detail">
+                            スカウト／スカウトプラスのメッセージ内容確認画面に新機能を追加いたしました
+                        </a>
+                    </span>
+                            </div>
+                            <a class="btn announcement-link" href="https://customer.quacareer.com/announcement/list">
+                    <i class="fa fa-list-ul"></i> お知らせ一覧 ›
+                </a>
+                    </div>
+
+        <div class="latest-announcement-content-for-sp">
+            <div class="latest-announcement-label-list-sp">
+                <span class="latest-announcement-label-sp">最新のお知らせ</span>
+                                    <a class="btn announcement-link" href="https://customer.quacareer.com/announcement/list">
+                        <i class="fa fa-list-ul"></i> お知らせ一覧 ›
+                    </a>
+                            </div>
+            <div class="latest-announcement-date-info-sp">
+                                    <span class="latest-announcement-date">
+                    2025.09.11
+                    </span>
+                    <span class="latest-announcement-title-container">
+                          <a class="latest-announcement-title" href="https://customer.quacareer.com/announcement/32/detail">
+                              スカウト／スカウトプラスのメッセージ内容確認画面に新機能を追加いたしました
+                          </a>
+                    </span>
+                            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .latest-announcement-container {
+        /* position: absolute; */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        margin-top: 5px;
+        margin-bottom: 18px;
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+
+    .latest-announcement-block {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .latest-announcement-content-for-pc {
+        width: 100%;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: white;
+        white-space: nowrap;
+    }
+
+    .latest-announcement-content-for-sp {
+        display: none;
+    }
+
+    .latest-announcement-label {
+        padding-left: 10px;
+        padding-right: 10px;
+        height: 36px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #C82063;
+        color: white;
+        margin-right: 0;
+        position: relative;
+    }
+
+    .latest-announcement-label::after {
+        content: "";
+        position: absolute;
+        right: -17.2px;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        width: 0;
+        height: 100%;
+        border-top: 18px solid transparent;
+        border-bottom: 18px solid transparent;
+        border-left: 18px solid #C82063;
+    }
+
+    .latest-announcement-info {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    .latest-announcement-none {
+        display: inline-block;
+        margin-right: 10px;
+        margin-left: 20px;
+        position: relative;
+        padding-right: 10px;
+    }
+
+    .latest-announcement-date {
+        font-size: 1em;
+        display: inline-block;
+        margin-right: 10px;
+        margin-left: 20px;
+        vertical-align: middle;
+        color: #333;
+        position: relative;
+        padding-right: 10px;
+    }
+
+    .latest-announcement-date::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 1px;
+        height: 16px;
+        background-color: #CCCCCC;
+    }
+
+    .latest-announcement-title-container {
+        display: block;
+        align-items: center;
+        height: unset;
+        flex-grow: 1;
+        overflow: hidden;
+    }
+
+    .latest-announcement-title {
+        font-size: 1em;
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        max-width: 100%;
+        flex-grow: 1;
+        cursor: pointer;
+    }
+
+    .announcement-link {
+        color: #4BA2C8;
+        background-color: #DDE8F3;
+        border: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        height: 90%;
+        white-space: nowrap;
+    }
+
+    .announcement-link:hover {
+        background-color: #D0E0ED;
+        color: #3792A4;
+        border: 2px solid transparent;
+    }
+
+    @media  only screen and (max-width: 1199px) {
+        .latest-announcement-container {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .latest-announcement-content-for-pc {
+            display: none;
+        }
+
+        .latest-announcement-content-for-sp {
+            padding:0.15em;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            white-space: nowrap;
+        }
+
+        .latest-announcement-container {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            width: auto;
+        }
+
+        .latest-announcement-label-list-sp {
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .latest-announcement-label-sp, .btn.announcement-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+            height: 90%;
+        }
+
+        .latest-announcement-label-sp {
+            padding: 0 0.4em;
+            line-height: 1.6em;
+            font-size: 0.8em;
+            margin-left: 2px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #C82063;
+            color: white;
+            position: relative;
+        }
+
+        .latest-announcement-date-info-sp {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .latest-announcement-date {
+            float: left;
+            margin-left: 5px;
+        }
+
+        .latest-announcement-title {
+            vertical-align: middle;
+        }
+
+        .btn.announcement-link {
+            font-size: 0.8em;
+            margin-right: 2px;
+            text-align: right;
+            flex-shrink: 0;
+            padding: 0 8px;
+        }
+
+        .latest-announcement-none {
+            float: left;
+            margin-left: 5px;
+        }
+    }
+
+    @media  only screen and (max-width: 767px) and (min-width: 600px) {
+        .latest-announcement-container {
+            margin-bottom: -1em;
+        }
+    }
+
+    @media  only screen and (max-width: 767px) {
+        .latest-announcement-date,
+        .latest-announcement-title{
+            font-size:0.9em
+        }
+    }
+</style>
+                </div>
+                <div class="content-line">
+                </div>
+                <div class="content-section">
+                    <div class="row">
+                        <div class="col-lg-8 col-xs-12">
+                            <meta name="csrf-token" content="cbi1YXO6tIfmvujjXsO1EXI1u5tzAjApcp1Awk07">
+<!-- Main content -->
+    <div class="row" id="scoutmailkekka">
+        <div class="col-xs-12">
+            <div class="box box-solid last-box scout-send-list">
+                <div class="box-body">
+                
+                <div class="sort-selection__wrapper">並び順:
+                    <div class="sbox">
+                        <select id="order_selection" onchange="sortTable('column')">
+                            <option value="0">配信日時</option>
+                            <option value="1">対象職種</option>
+                            <option value="2">配信件数</option>
+                            <option value="4">開封率</option>
+                        </select>
+                    </div>
+
+                    <input type="radio" name="radio1" onchange="sortTable('asc')" id="radio1_A" style=""><label for="radio1_A">昇順</label>
+                    <input type="radio" name="radio1" onchange="sortTable('desc')" id="radio1_B" style=""><label for="radio1_B">降順</label>
+                </div>
+
+                <div class="dataTable-wrap">
+
+                <div id="dataTable_wrapper" class="dt-container form-inline dt-bootstrap dt-empty-footer"><div class="row"><div class="col-sm-6 text-left "></div><div class="col-sm-6 text-right "></div></div><div class="row"><div class="col-sm-12 "><table id="dataTable" class="table table-bordered scout-s-fontsize result-list datatable__sort-smp--disable datatable__font-custom datatable__header--nowrap dataTable" style="text-overflow: ellipsis; width:100%;" aria-describedby="dataTable_info"><colgroup><col data-dt-column="0"><col data-dt-column="1"><col data-dt-column="3"><col data-dt-column="2"><col data-dt-column="4"><col data-dt-column="5"></colgroup>
+                    <thead>
+                        <tr role="row"><th data-dt-column="0" class="dt-body-left dt-head-left vertical_middle dt-orderable-asc dt-orderable-desc dt-ordering-desc" rowspan="1" colspan="1" aria-sort="descending" aria-label="配信日時: Activate to remove sorting" tabindex="0"><span class="dt-column-title" role="button">配信日時</span><span class="dt-column-order"></span></th><th data-dt-column="1" class="dt-body-left dt-head-left vertical_middle dt-orderable-asc dt-orderable-desc" rowspan="1" colspan="1" aria-label="対象職種: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">対象職種</span><span class="dt-column-order"></span></th><th data-dt-column="2" class="dt-body-left dt-head-left vertical_middle dt-orderable-none" rowspan="1" colspan="1" aria-label="メッセージ"><span class="dt-column-title">メッセージ</span><span class="dt-column-order"></span></th><th data-dt-column="3" class="dt-body-left dt-head-left vertical_middle dt-type-numeric dt-orderable-asc dt-orderable-desc" rowspan="1" colspan="1" aria-label="配信件数: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">配信件数</span><span class="dt-column-order"></span></th><th data-dt-column="4" class="dt-body-left dt-head-left vertical_middle dt-type-numeric dt-orderable-asc dt-orderable-desc" rowspan="1" colspan="1" aria-label="開封率: Activate to sort" tabindex="0"><span class="dt-column-title" role="button">開封率</span><span class="dt-column-order"></span></th><th data-dt-column="5" class="dt-body-left dt-head-left vertical_middle dt-type-numeric dt-orderable-none" rowspan="1" colspan="1" aria-label="詳細"><span class="dt-column-title">詳細</span><span class="dt-column-order"></span></th></tr>
+                    </thead>
+                    <tbody><tr class="mail-tr-28767 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_28767 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_28767">2025-12-26 09:59</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_28767">
+                                                                ＼ワンランク上を目指せる職場／
+はじめ…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="28767" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/28767">10</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                50%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="28767" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-28494 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_28494 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_28494">2025-12-19 09:59</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_28494">
+                                                                ＼ワンランク上を目指せる職場／
+はじめ…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="28494" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/28494">10</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                60%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="28494" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-28212 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_28212 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_28212">2025-12-12 09:30</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_28212">
+                                                                ＼ワンランク上を目指せる職場／
+はじめ…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="28212" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/28212">10</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                80%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="28212" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-26506 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_26506 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_26506">2025-11-01 14:11</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_26506">
+                                                                ＼ワンランク上を目指せる職場／
+はじめ…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="26506" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/26506">2</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                50%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="26506" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-23410 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_23410 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_23410">2025-09-02 16:52</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_23410">
+                                                                はじめまして！
+東京都港区白金高輪駅徒…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="23410" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/23410">1</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                100%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="23410" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-23121 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_23121 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_23121">2025-08-27 09:52</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_23121">
+                                                                はじめまして！
+東京都港区白金高輪駅徒…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="23121" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/23121">8</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                62.5%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="23121" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-21436 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_21436 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_21436">2025-07-15 22:06</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_21436">
+                                                                はじめまして！
+東京都港区白金高輪駅徒…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="21436" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/21436">1</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                100%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="21436" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-20980 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_20980 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_20980">2025-07-06 17:10</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_20980">
+                                                                はじめまして！
+東京都港区白金高輪駅徒…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="20980" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/20980">1</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                100%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="20980" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-20238 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_20238 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_20238">2025-06-17 09:24</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_20238">
+                                                                はじめまして！
+東京都港区白金高輪駅徒…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="20238" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/20238">2</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                100%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="20238" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr><tr class="mail-tr-19296 ">
+                                                
+                        
+                        
+                                                        
+                        
+                        
+                                            <td class="td_send_date_19296 dt-body-left dt-head-left vertical_middle sorting_1"><div class="send_date_19296">2025-05-24 16:54</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="">歯科衛生士</div></td><td class="dt-body-left dt-head-left vertical_middle"><div class="mail_title_19296">
+                                                                はじめまして！
+東京都港区白金高輪駅徒…
+                            </div>
+                            <button class="btn btn-xs btn-primary btn-block mail-info datatable__maillist--detail-button" data-id="19296" data-direct="0">詳細</button></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="">
+                                <a href="https://customer.quacareer.com/scout/history/19296">1</a>
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><div class="rate-text" style="">
+                                100%
+                            </div></td><td class="dt-type-numeric dt-body-left dt-head-left vertical_middle"><button class="btn btn-xs btn-primary btn-block mail-info" data-id="19296" data-direct="0" data-hasjobposting="1">詳細
+                            </button></td></tr></tbody>
+                <tfoot></tfoot></table></div></div><div class="row"><div class="col-sm-6 text-left "><div class="dt-info" aria-live="polite" id="dataTable_info" role="status"> 17 件中 1 から 10 まで表示</div></div><div class="col-sm-6 text-right "><div class="dt-paging paging_full_numbers"><ul class="pagination"><li class="dt-paging-button page-item disabled"><a class="page-link first" aria-controls="dataTable" aria-disabled="true" aria-label="First" data-dt-idx="first" tabindex="-1">先頭</a></li><li class="dt-paging-button page-item disabled"><a class="page-link previous" aria-controls="dataTable" aria-disabled="true" aria-label="Previous" data-dt-idx="previous" tabindex="-1">前</a></li><li class="dt-paging-button page-item active"><a href="#" class="page-link" aria-controls="dataTable" aria-current="page" data-dt-idx="0" tabindex="0">1</a></li><li class="dt-paging-button page-item"><a href="#" class="page-link" aria-controls="dataTable" data-dt-idx="1" tabindex="0">2</a></li><li class="dt-paging-button page-item"><a href="#" class="page-link next" aria-controls="dataTable" aria-label="Next" data-dt-idx="next" tabindex="0">次</a></li><li class="dt-paging-button page-item"><a href="#" class="page-link last" aria-controls="dataTable" aria-label="Last" data-dt-idx="last" tabindex="0">最終</a></li></ul></div></div></div></div>
+                </div>
+                                </div>
+                <!-- /.box-body -->
+            </div>
+        <!-- /.box -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+
+<div class="modal fade template-save-modal" id="">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header no-border">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span></button>
+                <h4 class="modal-title">テンプレートとして保存</h4>
+            </div>
+            <div class="modal-body bottom-zero" style="overflow-x: hidden; overflow-y: hidden">
+                <div class="form-group bottom-zero" style="width: 100%">
+                    <div class="title">テンプレートのタイトルを入力してください。</div>
+                    <input type="text" id="templateTitle" name="title" value="" class="text-size template-title" placeholder="ご入力ください" style="">
+                    <div id="titleError" class="error"></div>
+                </div>
+            </div>
+            <div class="modal-footer no-border template-save-confirm-modal" style="text-align:center">
+                <div class="footer-button-container">
+                    <button type="button" class="btn btn-primary template-save-submit" data-scout_mail_id="" data-offer_id="">
+                        この内容で保存
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade templateSaveResult" id="templateSaveResultScout" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header no-border">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">テンプレートとして保存</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group bottom-zero" style="width: 100%">
+                    <div class="text-center confirm-container">
+                        <p>テンプレートとして内容が保存されました。</p>
+                        <a href="https://customer.quacareer.com/template/list" class="btn btn-primary">テンプレート一覧へ</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer no-border template-save-confirm-modal" style="text-align:center">
+                <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade templateSaveResult" id="templateSaveResultOffer" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header no-border">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">テンプレートとして保存</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group bottom-zero" style="width: 100%">
+                    <div class="text-center confirm-container">
+                        <p>テンプレートとして内容が保存されました。</p>
+                        <a href="https://customer.quacareer.com/offerTemplate/list" class="btn btn-primary">テンプレート一覧へ</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer no-border template-save-confirm-modal" style="text-align:center">
+                <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade templateSaveResult" id="template-save-direct-to-normal" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header no-border">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">テンプレートとして保存</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group bottom-zero" style="width: 100%">
+                    <div class="text-center confirm-container">
+                        <p>テンプレートとして内容が保存されました。</p>
+                        <p class="mb-02e">このスカウトメッセージはWEB掲載中の求人がない状態で</p>
+                        <p class="mb-02e">作成されたため、求人ページの選択がテンプレートに反映されませんでした。</p>
+                        <p class="mb-1e">テンプレートを編集し、「応募求人URL」の欄で求人ページを選択してください。</p>
+                        <a href="https://customer.quacareer.com/template/list" class="btn btn-primary">テンプレート一覧へ</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer no-border template-save-confirm-modal" style="text-align:center">
+                <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade templateSaveResult" id="template-save-normal-to-direct" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header no-border">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">テンプレートとして保存</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group bottom-zero" style="width: 100%">
+                    <div class="text-center confirm-container">
+                        <p>テンプレートとして内容が保存されました。</p>
+                        <p class="mb-02e">応募先求人の選択が含まれていましたが、現在WEB掲載中の求人がないため、</p>
+                        <p class="mb-02e">テンプレートに反映されませんでした。</p>
+                        <p class="mb-1e">テンプレートを編集し、求人情報を「応募先情報欄」に直接ご記入ください。</p>
+                        <a href="https://customer.quacareer.com/template/list" class="btn btn-primary">テンプレート一覧へ</a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer no-border template-save-confirm-modal" style="text-align:center">
+                <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal.in.template-save-modal,
+    .modal.in.templateSaveResult {
+        z-index: 2100;
+    }
+
+    .text-size {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .title {
+        text-align: left;
+    }
+
+    .template-save-modal .modal-dialog,
+    .templateSaveResult .modal-dialog {
+        max-width: 800px;
+
+    }
+
+    .error {
+        text-align: left;
+        color: red;
+        font-size: 1em;
+    }
+
+    @media (max-width: 500px) {
+        .confirm-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+    }
+
+</style>
+<!-- スカウト詳細 -->
+<div class="modal fade" id="scout-mail-detail">
+    <div class="modal-dialog scout-mail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span></button>
+                <h4 class="modal-title">配信内容確認</h4>
+            </div>
+            <div class="modal-body mail-detail bottom-zero">
+                <div class="form-group sending-data">
+                    <div class="info-label">送信データ</div>
+                    <table class="table table-bordered nowrap detail info-for-pc">
+                        <tbody><tr>
+                            <th>対象職種</th>
+                            <td>
+                                <div class="detail-shokusyu"></div>
+                            </td>
+                            <th>配信件数</th>
+                            <td><span class="detail-send_count">0</span>件</td>
+                        </tr>
+                        <tr>
+                            <th>配信日時</th>
+                            <td><span class="detail-send_date"></span>
+                                <span class="detail-send_date_hh"></span>:<span class="detail-send_date_mm"></span></td>
+                            <th>開封率</th>
+                            <td><span class="detail-opening_rate"></span>％</td>
+                        </tr>
+                        <tr>
+                            <th>配信アカウント</th>
+                            <td><span class="detail-account"></span></td>
+                            <td colspan="2" class="empty-space"></td>
+                        </tr>
+                    </tbody></table>
+
+                    <table class="table table-bordered nowrap detail info-for-sp">
+                        <tbody><tr>
+                            <th>対象職種</th>
+                            <td>
+                                <div class="detail-shokusyu"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>配信件数</th>
+                            <td><span class="detail-send_count">0</span>件</td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td><span class="detail-send_date"></span>
+                                <span class="detail-send_date_hh"></span>:<span class="detail-send_date_mm"></span></td>
+                        </tr>
+                        <tr>
+                            <th>開封率</th>
+                            <td><span class="detail-opening_rate"></span>％</td>
+                        </tr>
+                        <tr>
+                            <th>配信アカウント</th>
+                            <td><span class="detail-account"></span></td>
+                        </tr>
+                    </tbody></table>
+                    <form id="search-again-condition-scout" action="/scout/createmail" method="POST">
+                        <input type="hidden" name="_token" value="cbi1YXO6tIfmvujjXsO1EXI1u5tzAjApcp1Awk07" style="">
+                        <input type="hidden" class="condition_id" name="condition_id" value="" style="">
+                    </form>
+                    <div class="search-again-button-container">
+                        <button class="btn btn-primary search-again-button" data-scout_type="scout">同じ条件で求職者を再検索する</button>
+                        <div class="auto-reply-caution"></div>
+                    </div>
+                </div>
+
+                <div class="form-group mail-detail bottom-zero">
+                    <div class="info-label">メッセージ</div>
+                    <div id="detail-mail_body-scout" class="form-control detail-mail_body"></div>
+                </div>
+
+                <input type="hidden" class="detail-scout_mail_id" value="" style="">
+                <input type="hidden" class="detail-api_mail_id" value="" style="">
+                <input type="hidden" class="detail-csv_file" value="" style="">
+            </div>
+            <div class="modal-footer no-border" style="text-align:center">
+                <div class="footer-button-container">
+                    <button type="button" class="btn btn-primary template-save-confirm">
+                        このメッセージをテンプレートにする
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- スカウトプラス詳細 -->
+<div class="modal fade" id="offer-mail-detail">
+    <div class="modal-dialog offer-mail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close clear-offer-detail" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span></button>
+                <h4 class="modal-title">配信内容確認</h4>
+            </div>
+            <div class="modal-body bottom-zero">
+                <div class="form-group sending-data">
+                    <div class="info-label">送信データ</div>
+                    <table class="table table-bordered nowrap detail info-for-pc">
+                        <tbody><tr>
+                            <th>対象職種</th>
+                            <td>
+                                <div class="detail-shokusyu"></div>
+                            </td>
+                            <th>配信件数</th>
+                            <td><span class="detail-send_count">0</span>件</td>
+                        </tr>
+                        <tr>
+                            <th>配信日時</th>
+                            <td><span class="detail-send_date"></span>
+                                <span class="detail-send_date_hh"></span>:<span class="detail-send_date_mm"></span></td>
+                            <th>開封率</th>
+                            <td><span class="detail-opening_rate"></span>％</td>
+                        </tr>
+                        <tr>
+                            <th>配信アカウント</th>
+                            <td><span class="detail-account"></span></td>
+                            <td colspan="2" class="empty-space"></td>
+                        </tr>
+                    </tbody></table>
+
+                    <table class="table table-bordered nowrap detail info-for-sp">
+                        <tbody><tr>
+                            <th>対象職種</th>
+                            <td>
+                                <div class="detail-shokusyu"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>配信件数</th>
+                            <td><span class="detail-send_count">0</span>件</td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td><span class="detail-send_date"></span>
+                                <span class="detail-send_date_hh"></span>:<span class="detail-send_date_mm"></span></td>
+                        </tr>
+                        <tr>
+                            <th>開封率</th>
+                            <td><span class="detail-opening_rate"></span>％</td>
+                        </tr>
+                        <tr>
+                            <th>配信アカウント</th>
+                            <td><span class="detail-account"></span></td>
+                        </tr>
+                    </tbody></table>
+                    <form id="search-again-condition-offer" action="/offer/createmail" method="POST">
+                        <input type="hidden" name="_token" value="cbi1YXO6tIfmvujjXsO1EXI1u5tzAjApcp1Awk07" style="">
+                        <input type="hidden" class="condition_id" name="condition_id" value="" style="">
+                    </form>
+                    <div style="display: flex; justify-content: center;">
+                        <button class="btn btn-primary search-again-button" data-scout_type="offer">同じ条件で求職者を再検索する</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="info-label">メッセージ</div>
+                    <div class="scoutplus_message">
+                        <div class="inner">
+                            <h3 class="catchcopy" id="detail-catch_copy"></h3>
+                            <div class="sp_wrapper" id="detail-mail_body-offer"></div>
+                        </div>
+                    </div>
+                    <input type="hidden" class="detail-scout_mail_id" value="" style="">
+                    <input type="hidden" class="detail-api_mail_id" value="" style="">
+                    <input type="hidden" class="detail-csv_file" value="" style="">
+                </div>
+            </div>
+            <div class="modal-footer no-border" style="text-align:center">
+                <div class="footer-button-container">
+                    <button type="button" class="btn btn-primary template-save-confirm">
+                        このメッセージをテンプレートにする
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- ダイレクトスカウトもしくはWeb掲載がない場合詳細 -->
+<div class="modal fade" id="direct-scout-mail-detail">
+    <div class="modal-dialog scout-mail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span></button>
+                <h4 class="modal-title">配信内容確認</h4>
+            </div>
+            <div class="modal-body mail-detail bottom-zero">
+                <div class="form-group sending-data">
+                    <div class="info-label">送信データ</div>
+                    <table class="table table-bordered nowrap detail info-for-pc">
+                        <tbody><tr>
+                            <th>対象職種</th>
+                            <td>
+                                <div class="detail-shokusyu"></div>
+                            </td>
+                            <th>配信件数</th>
+                            <td><span class="detail-send_count">0</span>件</td>
+                        </tr>
+                        <tr>
+                            <th>配信日時</th>
+                            <td><span class="detail-send_date"></span>
+                                <span class="detail-send_date_hh"></span>:<span class="detail-send_date_mm"></span></td>
+                            <th>開封率</th>
+                            <td><span class="detail-opening_rate"></span>％</td>
+                        </tr>
+                        <tr>
+                            <th>配信アカウント</th>
+                            <td><span class="detail-account"></span></td>
+                            <td colspan="2" class="empty-space"></td>
+                        </tr>
+                    </tbody></table>
+
+                    <table class="table table-bordered nowrap detail info-for-sp">
+                        <tbody><tr>
+                            <th>対象職種</th>
+                            <td>
+                                <div class="detail-shokusyu"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>配信件数</th>
+                            <td><span class="detail-send_count">0</span>件</td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td><span class="detail-send_date"></span>
+                                <span class="detail-send_date_hh"></span>:<span class="detail-send_date_mm"></span></td>
+                        </tr>
+                        <tr>
+                            <th>開封率</th>
+                            <td><span class="detail-opening_rate"></span>％</td>
+                        </tr>
+                        <tr>
+                            <th>配信アカウント</th>
+                            <td><span class="detail-account"></span></td>
+                        </tr>
+                    </tbody></table>
+                    <form id="search-again-condition-scout" action="/scout/createmail" method="POST">
+                        <input type="hidden" name="_token" value="cbi1YXO6tIfmvujjXsO1EXI1u5tzAjApcp1Awk07" style="">
+                        <input type="hidden" class="condition_id" name="condition_id" value="" style="">
+                    </form>
+                    <!-- <div class="search-again-button-container">
+                        <button class="btn btn-primary search-again-button" data-scout_type="scout">同じ条件で求職者を再検索する</button>
+                        <div class="auto-reply-caution"></div>
+                    </div> -->
+                </div>
+
+                <div class="form-group mail-detail bottom-zero">
+                    <div class="info-label">メッセージ</div>
+                    <div id="detail-mail_body-direct-scout" class="form-control detail-mail_body"></div>
+                </div>
+
+                <input type="hidden" class="detail-scout_mail_id" value="" style="">
+                <input type="hidden" class="detail-api_mail_id" value="" style="">
+                <input type="hidden" class="detail-csv_file" value="" style="">
+            </div>
+            <div class="modal-footer no-border" style="text-align:center">
+                <div class="footer-button-container">
+                    <button type="button" class="btn btn-primary template-save-confirm">
+                        このメッセージをテンプレートにする
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-close" data-dismiss="modal">閉じる</button>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<style>
+    #detail-mail_body-scout, #detail-mail_body-direct-scout {
+        height: auto;
+        overflow-y: scroll;
+        white-space: pre-wrap;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .sending-data table.info-for-pc td {
+        height: unset;
+    }
+
+    .sending-data table.info-for-pc th {
+        font-weight: unset;
+    }
+
+    .scout-mail-modal .info-label,
+    .offer-mail-modal .info-label{
+        margin-left: 0;
+        margin-bottom: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .modal-dialog.scout-mail-modal,
+        .modal-dialog.offer-mail-modal{
+            width: 650px;
+            margin: 30px auto;
+        }
+    }
+
+</style>
+                        </div>
+                        <div class="col-lg-4 col-xs-12 overide-bootstrap-column--1700"><div class="info-border"></div><div class="dashboard-detail-box page news news-Onresponsive">            <h2>クオキャリアからのお知らせ</h2>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSentfS1HU3lj4ojHYy9eu9p-PqVWGDevccPYkLX3eNYtlGcLg/viewform" target="_blank" class="hover1" style="text-decoration:none;">
+                <img src="/img/202503scoutplus_banner.jpg" style="width: 100%;">
+            </a>
+        </div></div>                        </div>
+                </div>
+
+            </section>
+            <!-- /.content -->
+                    </div>
+        <!-- /.content-wrapper -->
+
+    </div><script type="text/javascript" id="" charset="">(function(){function b(){!1===c&&(c=!0,Munchkin.init("497-XRD-390",{asyncOnly:!0,disableClickDelay:!0}))}var c=!1,a=document.createElement("script");a.type="text/javascript";a.async=!0;a.src="//munchkin.marketo.net/munchkin.js";a.onreadystatechange=function(){"complete"!=this.readyState&&"loaded"!=this.readyState||b()};a.onload=b;document.getElementsByTagName("head")[0].appendChild(a)})();</script><script id="_-s-js-_" text="" charset="" type="text/javascript" src="//satori.segs.jp/s.js?c=2ac5f6f6"></script><iframe src="https://satori.segs.jp/s_inner.html" style="width: 1px; height: 1px; display: none;"></iframe>
+    <!-- ./wrapper -->
+    <!-- modal dialog -->
+  <div class="modal fade" id="disableAlertForMenu" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button tyoe="button" class="close" data-dismiss="modal"><span></span></button>
+          <h4 class="modal-title">エラー</h4>
+        </div>
+        <div class="modal-body">
+          <div>DeCode利用権が残っていないため、新規診断依頼を登録できません。</div>
+        </div>
+        <div class="modal-footer" style="text-align:center">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">閉じる</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+  <!-- modal dialog -->
+  <div class="modal fade" id="disableScoutAlertForMenu" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button tyoe="button" class="close" data-dismiss="modal"><span></span></button>
+          <h4 class="modal-title">エラー</h4>
+        </div>
+        <div class="modal-body">
+          <div>スカウトメール利用権が不足しております。スカウト対象の件数を減らすか、スカウトメール利用権を購入してください。<br>ご購入はクオキャリア担当者までご連絡ください。</div>
+        </div>
+        <div class="modal-footer" style="text-align:center">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">閉じる</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+  <!-- modal dialog -->
+  <div class="modal fade" id="AlertForMapping" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+                <h4 class="modal-title">ご確認ください</h4>
+            </div>
+            <div class="modal-body" style="overflow-x: hidden;">
+                この機能をご利用いただくにあたり、<br>アカウントの準備が完了しておりません。<br>お手数ですが、クオキャリア事務局までお問い合わせください。<br>
+                <br>
+                <span class="phone_label">クオキャリア事務局</span><br>
+                <span class="phone_number">03-5927-9406</span><br>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="close_checkHoujinNo" class="btn btn-primary" data-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+    <!-- 求人の掲載があるかのステータス page -->
+    <input type="hidden" class="hasJobPosting" data-jobposting="1" style="">
+    <!-- Web掲載ないとき：スカウト -->
+<div class="modal fade close_job-posting" id="no_job_posting_scout_fav_search">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close close_job-posting" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+                <h4 class="modal-title">ご確認ください</h4>
+            </div>
+
+            <div class="modal-body modal_text_center" style="overflow-x: hidden;">
+                <div>
+                    web掲載およびスカウトメールの利用権をご購入いただくと<br>
+                    使用可能になります。<br>
+                    詳しくはお問い合わせください。
+                </div>
+                <div style="margin-top:1em;">
+                    <a href="https://info.quacareer.com/plans/#contact" target="_blank" rel="noopener noreferrer">お問い合わせはこちら ›
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="close_no_job_postin_scout_fav_search" class="btn btn-primary">閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Web掲載ないとき：スカウトプラス -->
+<div class="modal fade close_job-posting" id="no_job_posting_scout_plus">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close close_job-posting" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+                <h4 class="modal-title">ご確認ください</h4>
+            </div>
+
+            <div class="modal-body modal_text_center" style="overflow-x: hidden;">
+                <div>
+                    「スカウトプラス」は、web掲載および<br>
+                    スカウトプラスの利用権をご購入いただくと使用可能になります。<br>
+                    詳しくはお問い合わせください。
+                </div>
+                <div style="margin-top:1em;">
+                    <a href="https://info.quacareer.com/plans/#contact" target="_blank" rel="noopener noreferrer">お問い合わせはこちら ›
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="close_no_job_postin_scout_plus" class="btn btn-primary">閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Web掲載ないとき：テンプレート -->
+<!-- 20251209 使用しなくなります -->
+<div class="modal fade close_job-posting" id="no_job_posting_scout_template">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close close_job-posting" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+                <h4 class="modal-title">ご確認ください</h4>
+            </div>
+
+            <div class="modal-body modal_text_center" style="overflow-x: hidden;">
+                <div>
+                    「テンプレート管理」は、<br>
+                    Web掲載を行うと使用可能になります。<br>
+                    詳しくはお問い合わせください。
+                </div>
+                <div style="margin-top:1em;">
+                    <a href="https://info.quacareer.com/plans/#contact" target="_blank" rel="noopener noreferrer">お問い合わせはこちら ›
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="close_no_job_postin_scout_template" class="btn btn-primary">閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Web掲載ないとき：自動返信機能 -->
+<div class="modal fade close_job-posting" id="no_job_posting_auto_reply">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close close_job-posting" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"></span>
+                </button>
+                <h4 class="modal-title">ご確認ください</h4>
+            </div>
+
+            <div class="modal-body modal_text_center" style="overflow-x: hidden;">
+                <div>
+                    「お気に入り自動返信機能」は、<br>
+                    Web掲載を行うと使用可能になります。<br>
+                    詳しくはお問い合わせください。
+                </div>
+                <div style="margin-top:1em;">
+                    <a href="https://info.quacareer.com/plans/#contact" target="_blank" rel="noopener noreferrer">お問い合わせはこちら ›
+                    </a>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="close_no_job_postin_auto_reply" class="btn btn-primary">閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://customer.quacareer.com/vendor/adminlte/vendor/jquery/dist/jquery.min.js"></script>
+<script src="https://customer.quacareer.com/vendor/adminlte/vendor/jquery/dist/jquery.slimscroll.min.js"></script>
+<script src="https://customer.quacareer.com/vendor/adminlte/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <!-- Select2 -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+
+        
+    <link href="https://datatables-cdn.com/v/bs/dt-2.0.6/cr-2.0.1/r-3.0.2/datatables.css" rel="stylesheet">
+
+    <script src="https://datatables-cdn.com/v/bs/dt-2.0.6/cr-2.0.1/r-3.0.2/datatables.js"></script>
+
+    <!-- ChartJS -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
+
+    <script src="https://customer.quacareer.com/vendor/adminlte/dist/js/adminlte.min.js"></script>
+    <script>window.Promise || document.write('<script src="/js/promise-7.0.4.min.js"><\/script>');</script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+    <script async="" src="https://customer.quacareer.com/js/Object.keys.fix.js"></script>
+    <script async="" src="https://customer.quacareer.com/js/cart-vue.js"></script>
+    <script async="" src="https://customer.quacareer.com/js/remaining.js?param=1412045032"></script>
+    <script async="" src="https://customer.quacareer.com/js/show_menu_count.js"></script>
+
+
+    <script>
+        $(function () {
+            $("a[href$='to_newec/scout']").on('click', function (e) {
+                e.preventDefault();
+                let targetLink = $(this).attr('href');
+
+                // ローディング画面を改修。
+                // document.writeで書き換えると同タブで元にもどれないので
+                // ローディングオーバーレイを現在のページに追加
+                let loadingHtml = '<div id="loading-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:9999; display:flex; align-items:center; justify-content:center;"><div style="text-align:center; font-family: \'メイリオ\', Meiryo, sans-serif;"><style>.loading-spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; } @keyframes  spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style><div class="loading-spinner"></div>アカウント情報を確認中です。<br>少々お待ち下さい。</div></div>';
+                $('body').append(loadingHtml);
+
+                $.ajax({
+                    url: '/ajax/mappingexists',
+                    success: function (data) {
+                        if (String(data).trim() === 'NG') {
+
+                            $('#loading-overlay').remove();
+                            $('#AlertForMapping').modal('show');
+                            return;
+                        }
+                        // 確認中メッセージを最低2秒間表示
+                        setTimeout(function() {
+                            window.location.replace(targetLink)
+                        }, 2000);
+                    },
+                    error: function () {
+                        $('#loading-overlay').remove();
+                        alert('エラーが発生しました');
+                    }
+                });
+            });
+
+        });
+    /*
+$(document).ready(function(){
+    function alignModal(){
+        var modalDialog = $(this).find(".modal-dialog");
+
+        // Applying the top margin on modal to align it vertically center
+        var y_val = Math.max(0, ($(window).height() - modalDialog.height()) / 2);
+
+        modalDialog.animate({"margin-top":y_val});
+
+//        modalDialog.css({'display':'flex','align-items':'center','justify-content':'center'});
+    }
+    // Align modal when it is displayed
+    $(".modal").on("shown.bs.modal", alignModal);
+
+    // Align modal when user resize the window
+    $(window).on("resize", function(){
+        $(".modal:visible").each(alignModal);
+    });
+});
+    */
+</script>
+          <!-- page script -->
+  <script src="https://customer.quacareer.com/js/statusManagement.js?v=20250825"></script>
+  <script src="https://customer.quacareer.com/js/searchAgainCondition.js?v=20250825"></script>
+  <script src="https://customer.quacareer.com/js/templateSaveFromResult.js?v=20250627"></script>
+  <script>
+    $(function () {
+        $(document).on('touchstart','.btn-app', function(){
+            $(".btn-app").fadeOut("slow");
+        });
+        $(document).on('touchstart','.dataTables_scroll', function(){
+            $(".btn-app").fadeOut("slow");
+        });
+
+        var table = new DataTable('#dataTable', {
+            autoWidth : false,
+            lengthChange : false,
+            searching: false,
+            order: [ [ 0, "desc" ] ],
+            language: {
+                url: '/js/datatable-ja.json',
+            },
+            colReorder: {
+                order: [ 0,1,3,2,4,5 ],
+                enable: false
+            },
+            columnDefs: [
+                {
+                    orderable: false,
+                    targets: [3, 5]
+                },
+                {
+                    type: 'num',
+                    targets: 5
+                },
+                {
+                    orderSequence :  ['asc', 'desc'],
+                    className : 'dt-body-left dt-head-left vertical_middle',
+                    targets : '_all'
+                },
+            ]
+        });
+
+        $("#dataTable").on('order.dt', function () {
+            adjustOrderSelection();
+        });
+
+    });
+
+
+    $(window).on('load', function () {
+
+        hideColumn();
+        adjustOrderSelection();
+
+        $('#dataTable').DataTable().$('.mail-info').on('click', function () {
+
+            $(this).prop("disabled", true);
+            $(this).addClass("disabled");
+
+            const scoutMailId = $(this).data('id');
+            const buttonElement = $(this);
+            const isDirect = $(this).data('direct')
+            const hasJobPosting = $(this).data('hasjobposting')
+            console.log(hasJobPosting)
+            // statusManagement.jsの関数
+            showScoutMailDetail(scoutMailId, buttonElement, hasJobPosting);
+            // showScoutMailDetail(scoutMailId, buttonElement);
+
+        });
+
+    });
+
+    $(window).resize(function () {
+        hideColumn();
+    });
+
+    let orderType = 'desc';
+    let orderColumn = 0;
+
+    function sortTable(sortOption) {
+        let order = $('#dataTable').DataTable().order();
+
+        orderColumn = document.getElementById("order_selection").value;
+        if (sortOption != 'column') {
+            orderType = sortOption;
+        } else if (order[0][1] == 'asc') {
+            orderType = 'asc';
+        } else if (order[0][1] == 'desc') {
+            orderType = 'desc'
+        }
+
+        $('#dataTable').DataTable().order([Number(orderColumn), orderType]).draw();
+    }
+
+    function hideColumn() {
+        let table = $('#dataTable').DataTable();
+
+        if (window.innerWidth <= 1000 && ( $('#dataTable').DataTable().column(5).visible() == true )) {
+            $('#dataTable').DataTable().column(5).visible(false);
+            table.$('.datatable__maillist--detail-button').attr('style', 'display: block');
+            adjustNewTableTitle(true);
+        }
+        if (window.innerWidth > 1000 && ( $('#dataTable').DataTable().column(5).visible() == false )) {
+            $('#dataTable').DataTable().column(5).visible(true);
+            table.$('.datatable__maillist--detail-button').attr('style', 'display: none');
+            adjustNewTableTitle();
+        }
+    }
+
+    function adjustNewTableTitle(param = false) {
+        if (param) {
+            $("#dataTable thead th[data-dt-column='3'] .dt-column-title").text('件数');
+        } else {
+            $("#dataTable thead th[data-dt-column='3'] .dt-column-title").text('配信件数');
+        }
+    }
+
+    // PC and smp order sync
+    function adjustOrderSelection() {
+        let order = $('#dataTable').DataTable().order();
+
+        if (order[0][1] == 'asc') {
+            $("#radio1_A").prop("checked", true);
+        } else if (order[0][1] == 'desc') {
+            $("#radio1_B").prop("checked", true);
+        }
+
+        let order_selection = "#order_selection option[value=" + order[0][0] + "]";
+
+        $(order_selection).prop('selected', true);
+    }
+
+  </script>
+
+
+
+
+<iframe src="https://satori.segs.jp/s?cu=https%3A%2F%2Fcustomer.quacareer.com%2Fscout%2Fmaillist&amp;ru=&amp;c=2ac5f6f6&amp;stid=1e8dff60-138b-44c2-aa34-90a3d1c17065&amp;optout=" style="width: 1px; height: 1px; display: none;"></iframe></body></html>

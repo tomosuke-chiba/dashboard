@@ -122,8 +122,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | ec6387f feat: Notion案件進捗ダッシュボード完成 |
-| Updated | 2025-12-31 19:31:47 |
+| Last Commit | 22c7056 feat: JobMedley/Quacareer DB統合 & スカウト日別手入力UI |
+| Updated | 2025-12-31 19:32:50 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
