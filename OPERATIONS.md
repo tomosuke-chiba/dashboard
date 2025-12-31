@@ -122,8 +122,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | 22c7056 feat: JobMedley/Quacareer DB統合 & スカウト日別手入力UI |
-| Updated | 2025-12-31 19:32:50 |
+| Last Commit | b1df755 12/31 追加 |
+| Updated | 2025-12-31 19:42:42 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports

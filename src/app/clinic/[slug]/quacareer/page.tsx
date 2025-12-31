@@ -26,6 +26,9 @@ interface QuacareerData {
   scrapedAt: string | null;
 }
 
+// 職種タイプ
+type JobTypeFilter = 'all' | '歯科衛生士' | '歯科医師';
+
 export default function QuacareerPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -35,6 +38,7 @@ export default function QuacareerPage() {
   const [clinicName, setClinicName] = useState<string>(slug);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedJobType, setSelectedJobType] = useState<JobTypeFilter>('all');
 
   useEffect(() => {
     async function fetchClinicName() {
@@ -72,7 +76,27 @@ export default function QuacareerPage() {
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [slug]);
+
+  // 職種でフィルタリングしたスカウトメール
+  const filteredScoutMails = data?.scoutMails.filter((mail) => {
+    if (selectedJobType === 'all') return true;
+    return mail.targetJobType.includes(selectedJobType);
+  }) || [];
+
+  // 職種別サマリー計算
+  const getJobTypeSummary = (jobType: JobTypeFilter) => {
+    const mails = jobType === 'all'
+      ? (data?.scoutMails || [])
+      : (data?.scoutMails || []).filter((m) => m.targetJobType.includes(jobType));
+
+    const totalDelivery = mails.reduce((sum, m) => sum + m.deliveryCount, 0);
+    const avgOpenRate = mails.length > 0
+      ? mails.reduce((sum, m) => sum + m.openRate, 0) / mails.length
+      : 0;
+
+    return { count: mails.length, totalDelivery, avgOpenRate };
+  };
 
   if (!mounted) {
     return (
@@ -179,10 +203,83 @@ export default function QuacareerPage() {
               </div>
             )}
 
+            {/* 職種タブ */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                {(['all', '歯科衛生士', '歯科医師'] as JobTypeFilter[]).map((jobType) => {
+                  const summary = getJobTypeSummary(jobType);
+                  const label = jobType === 'all' ? '全て' : jobType;
+                  return (
+                    <button
+                      key={jobType}
+                      onClick={() => setSelectedJobType(jobType)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                        selectedJobType === jobType
+                          ? jobType === '歯科衛生士'
+                            ? 'bg-pink-600 text-white'
+                            : jobType === '歯科医師'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-purple-600 text-white'
+                          : isDark
+                            ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
+                      }`}
+                    >
+                      <span>{label}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        selectedJobType === jobType
+                          ? 'bg-white/20'
+                          : isDark ? 'bg-slate-600' : 'bg-slate-100'
+                      }`}>
+                        {summary.count}件
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 選択中の職種サマリー */}
+              {selectedJobType !== 'all' && (
+                <div className={`mt-4 p-4 rounded-lg ${
+                  selectedJobType === '歯科衛生士'
+                    ? isDark ? 'bg-pink-900/30' : 'bg-pink-50'
+                    : isDark ? 'bg-blue-900/30' : 'bg-blue-50'
+                }`}>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className={`text-xs ${selectedJobType === '歯科衛生士' ? 'text-pink-600' : 'text-blue-600'}`}>配信回数</p>
+                      <p className={`text-xl font-bold ${selectedJobType === '歯科衛生士' ? 'text-pink-700' : 'text-blue-700'}`}>
+                        {getJobTypeSummary(selectedJobType).count}回
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs ${selectedJobType === '歯科衛生士' ? 'text-pink-600' : 'text-blue-600'}`}>総配信数</p>
+                      <p className={`text-xl font-bold ${selectedJobType === '歯科衛生士' ? 'text-pink-700' : 'text-blue-700'}`}>
+                        {getJobTypeSummary(selectedJobType).totalDelivery.toLocaleString()}件
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-xs ${selectedJobType === '歯科衛生士' ? 'text-pink-600' : 'text-blue-600'}`}>平均開封率</p>
+                      <p className={`text-xl font-bold ${selectedJobType === '歯科衛生士' ? 'text-pink-700' : 'text-blue-700'}`}>
+                        {getJobTypeSummary(selectedJobType).avgOpenRate.toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* スカウトメール一覧 */}
             <div className={`rounded-lg shadow overflow-hidden ${isDark ? "bg-slate-800" : "bg-white"}`}>
               <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-200"}`}>
-                <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>スカウトメール一覧</h2>
+                <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                  スカウトメール一覧
+                  {selectedJobType !== 'all' && (
+                    <span className={`ml-2 text-sm font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      （{selectedJobType}）
+                    </span>
+                  )}
+                </h2>
                 <p className={`text-xs mt-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
                   最終取得: {data.scrapedAt ? new Date(data.scrapedAt).toLocaleString('ja-JP') : '未取得'}
                 </p>
@@ -199,8 +296,8 @@ export default function QuacareerPage() {
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? "divide-slate-700" : "divide-slate-200"}`}>
-                    {data.scoutMails.length > 0 ? (
-                      data.scoutMails.map((mail, index) => (
+                    {filteredScoutMails.length > 0 ? (
+                      filteredScoutMails.map((mail, index) => (
                         <tr key={index} className={isDark ? "hover:bg-slate-700" : "hover:bg-slate-50"}>
                           <td className={`px-6 py-4 whitespace-nowrap text-sm ${isDark ? "text-slate-300" : "text-slate-900"}`}>
                             {mail.deliveryDate}
