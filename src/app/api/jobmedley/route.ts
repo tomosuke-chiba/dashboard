@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { formatInTimeZone } from 'date-fns-tz';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getDailyMetrics, getJobOffers, getJobOfferSummary } from '@/lib/jobmedley-db';
+import { getDailyMetrics, getJobOffers, getJobOfferSummary, getJobOfferIndicators } from '@/lib/jobmedley-db';
 
 /**
  * GET /api/jobmedley
@@ -120,6 +120,10 @@ export async function GET(request: NextRequest) {
       summary = await getJobOfferSummary(supabase, clinic.id, jobOfferIdParam);
     }
 
+    // 求人重要指標を取得（全件 or 指定求人）
+    const indicatorFilter = jobOfferIdParam && jobOfferIdParam !== 'all' ? jobOfferIdParam : undefined;
+    const indicators = await getJobOfferIndicators(supabase, clinic.id, indicatorFilter);
+
     // 最新のscraped_atを取得
     const { data: latestScout } = await supabase
       .from('jobmedley_scouts')
@@ -186,6 +190,7 @@ export async function GET(request: NextRequest) {
       dailyData,
       summary,
       jobOffers,
+      indicators,
       // 後方互換
       analysis,
       scout,

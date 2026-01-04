@@ -20,7 +20,7 @@ export async function GET(
     // クライアント情報を取得
     const { data: clinic, error: clinicError } = await supabase
       .from('clinics')
-      .select('id, name, slug')
+      .select('id, name, slug, guppy_profile_completeness, guppy_independence_support, guppy_profile_updated_at, guppy_profile_scraped_at')
       .eq('slug', slug)
       .single();
 

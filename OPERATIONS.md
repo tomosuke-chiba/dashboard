@@ -122,8 +122,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | 8a29fe8 feat: Quacareerスカウトメールに職種別フィルタUI追加 |
-| Updated | 2026-01-01 01:00:23 |
+| Last Commit | afb5407 1/1 1:00 |
+| Updated | 2026-01-04 12:28:50 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports

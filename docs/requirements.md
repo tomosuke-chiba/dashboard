@@ -5,7 +5,7 @@
 **プロジェクト名**: 求人媒体ダッシュボード
 **クライアント**: 株式会社KOU
 **作成日**: 2024年12月29日
-**最終更新日**: 2025年12月31日
+**最終更新日**: 2026年1月1日
 
 ---
 
@@ -26,8 +26,8 @@
 
 ### 1.3 ダッシュボード閲覧者
 
-- **貴社担当者のみ**（クライアントには共有しない）
-- → 複雑な権限管理は不要
+- ~~貴社担当者のみ~~ → **御社担当者 + クライアント（歯科医院）の両方**
+- 詳細は [12.2 利用者とアクセス権限](#122-利用者とアクセス権限更新) を参照
 
 ---
 
@@ -501,6 +501,15 @@ BITLY_ACCESS_TOKEN          # 新規追加
 | HIRE-01 | 採用決定登録 | 採用日・職種・媒体・経路を登録 |
 | HIRE-02 | 目標進捗自動更新 | 採用決定登録時に進捗率を自動更新 |
 
+#### 12.3.7 バナー管理【新規開発】
+
+| ID | 機能 | 詳細 |
+|----|------|------|
+| BANNER-01 | GUPPYバナー登録 | バナー画像URL・対応する文言を手入力で登録 |
+| BANNER-02 | ジョブメドレーバナー登録 | バナー画像URL・対応する文言を手入力で登録 |
+| BANNER-03 | バナー履歴管理 | 使用期間を記録し、効果比較可能に |
+| BANNER-04 | バナー一覧表示 | ダッシュボード上でバナーと文言を閲覧可能 |
+
 ### 12.4 新規テーブル設計
 
 #### clinic_auth（クリニック認証）
@@ -586,6 +595,25 @@ CREATE TABLE hires (
 );
 ```
 
+#### banners（バナー管理）
+
+```sql
+CREATE TABLE banners (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clinic_id UUID REFERENCES clinics(id) ON DELETE CASCADE NOT NULL,
+  source TEXT NOT NULL,  -- 'guppy', 'jobmedley'
+  banner_name TEXT,  -- バナーの識別名（例：「メインバナーv1」）
+  image_url TEXT,  -- バナー画像URL
+  copy_text TEXT,  -- バナーに対応する文言・コピー
+  description TEXT,  -- 説明・メモ
+  used_from DATE,
+  used_to DATE,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
 ### 12.5 既存テーブル拡張
 
 #### clinics テーブルに追加
@@ -643,17 +671,20 @@ ALTER TABLE quacareer_scout_mails ADD COLUMN application_count INTEGER DEFAULT 0
 | B-6 | 目標設定画面UI実装 | 未着手 |
 | B-7 | 進捗カード表示UI実装 | 未着手 |
 
-### Phase C: スカウト文面管理【優先度：高】
+### Phase C: スカウト文面・バナー管理【優先度：高】
 
 | タスク | 概要 | ステータス |
 |--------|------|-----------|
 | C-1 | `guppy_scout_templates` テーブル作成 | 未着手 |
 | C-2 | `jobmedley_scout_templates` テーブル作成 | 未着手 |
 | C-3 | `quacareer_scout_mails` テーブル拡張 | 未着手 |
-| C-4 | 文面登録API実装 | 未着手 |
-| C-5 | 文面一覧API実装 | 未着手 |
-| C-6 | 文面管理画面UI実装 | 未着手 |
-| C-7 | ダッシュボードへの文面表示追加 | 未着手 |
+| C-4 | `banners` テーブル作成 | 未着手 |
+| C-5 | 文面登録API実装 | 未着手 |
+| C-6 | 文面一覧API実装 | 未着手 |
+| C-7 | バナー登録・一覧API実装 | 未着手 |
+| C-8 | 文面管理画面UI実装 | 未着手 |
+| C-9 | バナー管理画面UI実装 | 未着手 |
+| C-10 | ダッシュボードへの文面・バナー表示追加 | 未着手 |
 
 ### Phase D: KPIアラート機能【優先度：高】
 

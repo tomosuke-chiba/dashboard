@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTheme, ThemeToggle } from '@/hooks/useTheme';
+import { KPISummary, AlertList, SolutionTable } from '@/components/KPICard';
+import {
+  QUACAREER_KPIS,
+  QUACAREER_SOLUTIONS,
+  createKPIAlert,
+  KPIAlert,
+} from '@/lib/kpi';
 
 interface QuacareerDashboardData {
   totalApplicants: number;
@@ -97,6 +104,20 @@ export default function QuacareerPage() {
 
     return { count: mails.length, totalDelivery, avgOpenRate };
   };
+
+  // KPIアラート計算
+  const openRate = data?.dashboard?.scoutMailOpenRate || 0;
+  const scoutCount = data?.scoutMails?.length || 0;
+
+  // KPIアラートを生成
+  const quacareerKPIs = [
+    createKPIAlert(openRate, QUACAREER_KPIS.openRate, 'quacareer', 'scout'),
+    createKPIAlert(scoutCount, QUACAREER_KPIS.weeklyScoutCount, 'quacareer', 'scout'),
+  ];
+
+  // すべてのアラートを結合
+  const allAlerts: KPIAlert[] = quacareerKPIs;
+  const [showSolutions, setShowSolutions] = useState(false);
 
   if (!mounted) {
     return (
@@ -200,6 +221,62 @@ export default function QuacareerPage() {
                   color="orange"
                   isDark={isDark}
                 />
+              </div>
+            )}
+
+            {/* KPIアラートセクション */}
+            <div className={`rounded-lg shadow mb-8 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'} flex items-center justify-between`}>
+                <div>
+                  <h2 className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>KPIアラート</h2>
+                  <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    閾値に基づく自動判定・改善施策の提案
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowSolutions(!showSolutions)}
+                  className={`text-sm px-3 py-1.5 rounded-lg transition ${
+                    isDark
+                      ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {showSolutions ? '施策対応表を隠す' : '施策対応表を見る'}
+                </button>
+              </div>
+              <div className="p-6">
+                {/* スカウトKPI */}
+                <div className="mb-6">
+                  <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                    スカウト経路
+                  </h3>
+                  <KPISummary
+                    title=""
+                    kpis={quacareerKPIs.map(kpi => ({
+                      title: kpi.kpiName,
+                      value: kpi.value,
+                      unit: kpi.unit,
+                      level: kpi.level,
+                      message: kpi.message,
+                      solution: kpi.solution,
+                    }))}
+                  />
+                </div>
+
+                {/* アラート一覧 */}
+                <div>
+                  <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                    アラート一覧
+                  </h3>
+                  <AlertList alerts={allAlerts} />
+                </div>
+              </div>
+            </div>
+
+            {/* 施策対応表（トグル表示） */}
+            {showSolutions && (
+              <div className="mb-8">
+                <SolutionTable title="クオキャリアの改善施策" solutions={QUACAREER_SOLUTIONS} />
               </div>
             )}
 

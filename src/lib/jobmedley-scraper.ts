@@ -1250,3 +1250,280 @@ export async function scrapeJobMedleyDailyBatch(
     }
   }
 }
+
+// ============================================
+// 求人重要指標取得（Phase E: PROF-02）
+// ============================================
+
+const JOBMEDLEY_JOB_OFFER_URL = 'https://customers.job-medley.com/customers/job_offers';
+
+// 求人重要指標データ
+export interface JobOfferIndicators {
+  jobOfferId: string;
+  name: string;
+  title: string | null;
+  hasSpeedReplyBadge: boolean;
+  hasStaffVoice: boolean;
+  hasWorkplaceInfo: boolean;
+  mainPhotoUrl: string | null;
+  photoCount: number;
+  featureTags: string[];
+  daysSinceUpdate: number | null;
+  lastUpdatedAt: Date | null;
+  scrapedAt: Date;
+}
+
+/**
+ * 求人詳細ページから重要指標を取得
+ * Requirements: PROF-02
+ */
+export async function scrapeJobOfferIndicators(
+  page: Page,
+  jobOfferId: string
+): Promise<JobOfferIndicators | null> {
+  try {
+    console.log(`JobMedley: Scraping indicators for job offer ${jobOfferId}...`);
+
+    // 求人詳細編集ページに移動
+    const url = `${JOBMEDLEY_JOB_OFFER_URL}/${jobOfferId}/edit`;
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForTimeout(3000);
+
+    // 重要指標を抽出
+    const indicators = await page.evaluate((targetJobOfferId: string) => {
+      const result: {
+        jobOfferId: string;
+        name: string;
+        title: string | null;
+        hasSpeedReplyBadge: boolean;
+        hasStaffVoice: boolean;
+        hasWorkplaceInfo: boolean;
+        mainPhotoUrl: string | null;
+        photoCount: number;
+        featureTags: string[];
+        daysSinceUpdate: number | null;
+        lastUpdatedAt: string | null;
+      } = {
+        jobOfferId: targetJobOfferId,
+        name: '',
+        title: null,
+        hasSpeedReplyBadge: false,
+        hasStaffVoice: false,
+        hasWorkplaceInfo: false,
+        mainPhotoUrl: null,
+        photoCount: 0,
+        featureTags: [],
+        daysSinceUpdate: null,
+        lastUpdatedAt: null,
+      };
+
+      const bodyText = document.body.innerText;
+
+      // 求人名/タイトル
+      const titleInput = document.querySelector('input[name*="title"], input[name*="job_title"]') as HTMLInputElement;
+      if (titleInput) {
+        result.title = titleInput.value || null;
+        result.name = titleInput.value || '';
+      }
+
+      // スピード返信アイコンの有無
+      const speedReplyKeywords = ['スピード返信', 'speed_reply', 'quick_reply', '24時間以内'];
+      for (const keyword of speedReplyKeywords) {
+        if (bodyText.includes(keyword)) {
+          // チェックボックスや表示を確認
+          const isChecked = document.querySelector('[class*="speed"][class*="badge"], [class*="speed-reply"].active, input[name*="speed"]:checked');
+          if (isChecked) {
+            result.hasSpeedReplyBadge = true;
+            break;
+          }
+          // テキストで「表示中」「有効」を確認
+          const keywordIndex = bodyText.indexOf(keyword);
+          const contextText = bodyText.substring(keywordIndex, keywordIndex + 30);
+          if (contextText.match(/(表示|有効|ON|あり)/)) {
+            result.hasSpeedReplyBadge = true;
+            break;
+          }
+        }
+      }
+
+      // 職員の声の有無
+      const staffVoiceSection = document.querySelector('[class*="staff-voice"], [class*="employee"], [id*="staff"]');
+      if (staffVoiceSection) {
+        const content = staffVoiceSection.textContent || '';
+        if (content.length > 10) {
+          result.hasStaffVoice = true;
+        }
+      }
+      // テキストで確認
+      if (bodyText.includes('職員の声') || bodyText.includes('スタッフの声')) {
+        const match = bodyText.match(/職員の声[：:\s]*(\d+)件/);
+        if (match && parseInt(match[1], 10) > 0) {
+          result.hasStaffVoice = true;
+        }
+      }
+
+      // 職場環境情報の有無
+      const workplaceKeywords = ['職場の環境', '職場環境', 'workplace'];
+      for (const keyword of workplaceKeywords) {
+        if (bodyText.includes(keyword)) {
+          const workplaceSection = document.querySelector('[class*="workplace"], [class*="environment"]');
+          if (workplaceSection && (workplaceSection.textContent || '').length > 10) {
+            result.hasWorkplaceInfo = true;
+            break;
+          }
+        }
+      }
+
+      // 写真枚数
+      const photoElements = document.querySelectorAll('[class*="photo"] img, [class*="image"] img, .gallery img');
+      result.photoCount = photoElements.length;
+
+      // メイン写真URL
+      if (photoElements.length > 0) {
+        const firstPhoto = photoElements[0] as HTMLImageElement;
+        result.mainPhotoUrl = firstPhoto.src || null;
+      }
+
+      // 特徴タグ
+      const tagElements = document.querySelectorAll('[class*="tag"], [class*="feature"], .badge');
+      tagElements.forEach(el => {
+        const text = el.textContent?.trim();
+        if (text && text.length < 30 && !text.includes('円') && !text.includes('日')) {
+          result.featureTags.push(text);
+        }
+      });
+
+      // チェックされた特徴タグを取得
+      const checkedFeatures = document.querySelectorAll('input[type="checkbox"][name*="feature"]:checked, input[type="checkbox"][name*="tag"]:checked');
+      checkedFeatures.forEach(el => {
+        const label = el.closest('label')?.textContent?.trim() || '';
+        if (label && !result.featureTags.includes(label)) {
+          result.featureTags.push(label);
+        }
+      });
+
+      // 更新日/経過日数
+      const updatePatterns = [
+        /最終更新[：:\s]*(\d{4}[年\/\-]\d{1,2}[月\/\-]\d{1,2}日?)/,
+        /更新日[：:\s]*(\d{4}[年\/\-]\d{1,2}[月\/\-]\d{1,2}日?)/,
+        /(\d{4}[年\/\-]\d{1,2}[月\/\-]\d{1,2}日?)\s*(?:に)?更新/,
+      ];
+
+      for (const pattern of updatePatterns) {
+        const match = bodyText.match(pattern);
+        if (match) {
+          result.lastUpdatedAt = match[1];
+          break;
+        }
+      }
+
+      // 経過日数の直接取得
+      const daysMatch = bodyText.match(/(?:更新から)?(\d+)\s*日(?:経過|前)/);
+      if (daysMatch) {
+        result.daysSinceUpdate = parseInt(daysMatch[1], 10);
+      }
+
+      return result;
+    }, jobOfferId);
+
+    // 日付を変換
+    let lastUpdatedAt: Date | null = null;
+    if (indicators.lastUpdatedAt) {
+      const dateStr = indicators.lastUpdatedAt
+        .replace(/年/g, '-')
+        .replace(/月/g, '-')
+        .replace(/日/g, '')
+        .replace(/\//g, '-');
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        lastUpdatedAt = parsed;
+      }
+    }
+
+    // 経過日数を計算（日付から）
+    let daysSinceUpdate = indicators.daysSinceUpdate;
+    if (!daysSinceUpdate && lastUpdatedAt) {
+      const now = new Date();
+      const diffTime = now.getTime() - lastUpdatedAt.getTime();
+      daysSinceUpdate = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    console.log(`JobMedley Indicators [${jobOfferId}]: speedReply=${indicators.hasSpeedReplyBadge}, staffVoice=${indicators.hasStaffVoice}, photos=${indicators.photoCount}`);
+
+    return {
+      jobOfferId: indicators.jobOfferId,
+      name: indicators.name,
+      title: indicators.title,
+      hasSpeedReplyBadge: indicators.hasSpeedReplyBadge,
+      hasStaffVoice: indicators.hasStaffVoice,
+      hasWorkplaceInfo: indicators.hasWorkplaceInfo,
+      mainPhotoUrl: indicators.mainPhotoUrl,
+      photoCount: indicators.photoCount,
+      featureTags: indicators.featureTags,
+      daysSinceUpdate,
+      lastUpdatedAt,
+      scrapedAt: new Date(),
+    };
+  } catch (error) {
+    console.error(`JobMedley: Error scraping indicators for ${jobOfferId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * 全求人の重要指標を一括取得
+ */
+export async function scrapeAllJobOfferIndicators(
+  email: string,
+  password: string
+): Promise<{
+  indicators: JobOfferIndicators[];
+  scrapedAt: Date;
+} | null> {
+  let browser: Browser | null = null;
+
+  try {
+    browser = await chromium.launch({ headless: true });
+
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    });
+
+    const page = await context.newPage();
+
+    // ログイン
+    const loggedIn = await login(page, email, password);
+    if (!loggedIn) {
+      console.error('JobMedley: Login failed');
+      return null;
+    }
+
+    // 求人リスト取得
+    const jobOffers = await scrapeJobOfferList(page);
+    console.log(`JobMedley: Found ${jobOffers.length} job offers for indicator scraping`);
+
+    // 各求人の重要指標を取得
+    const indicators: JobOfferIndicators[] = [];
+    for (const jobOffer of jobOffers) {
+      const indicator = await scrapeJobOfferIndicators(page, jobOffer.jobOfferId);
+      if (indicator) {
+        indicator.name = jobOffer.name;
+        indicators.push(indicator);
+      }
+      // レート制限対策
+      await page.waitForTimeout(1500);
+    }
+
+    return {
+      indicators,
+      scrapedAt: new Date(),
+    };
+  } catch (error) {
+    console.error('JobMedley: Error scraping all job offer indicators:', error);
+    return null;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+}

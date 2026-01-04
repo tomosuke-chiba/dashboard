@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { formatInTimeZone } from 'date-fns-tz';
-import { scrapeGuppyByJobType, scrapeGuppyScoutMessages } from '@/lib/scraper';
-import { scrapeJobMedley } from '@/lib/jobmedley-scraper';
+import { scrapeGuppyByJobType, scrapeGuppyScoutMessages, scrapeGuppyProfile } from '@/lib/scraper';
+import { scrapeAllJobOfferIndicators, scrapeJobMedley } from '@/lib/jobmedley-scraper';
 import { scrapeQuacareer } from '@/lib/quacareer-scraper';
 import { sendDiscordNotification, sendViewRateAlert, isViewRateAbnormal, calculateViewRate } from '@/lib/discord';
 import { fetchAllClinicsBitlyClicks, fetchAndSaveBitlyLinkClicks } from '@/lib/bitly';
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
     for (const clinic of (clinics || []) as Clinic[]) {
       let scrapeResult: Awaited<ReturnType<typeof scrapeGuppyByJobType>> | null = null;
       let scoutResult: Awaited<ReturnType<typeof scrapeGuppyScoutMessages>> | null = null;
+      let profileResult: Awaited<ReturnType<typeof scrapeGuppyProfile>> | null = null;
       let guppyStatus: { success: boolean; error?: string } = {
         success: false,
         error: runGuppy ? 'No credentials' : 'Skipped',
@@ -179,6 +180,38 @@ export async function POST(request: NextRequest) {
             }
           }
 
+          // プロフィール情報取得
+          profileResult = await scrapeGuppyProfile(
+            clinic.id,
+            clinic.name,
+            clinic.guppy_login_id,
+            clinic.guppy_password
+          );
+
+          if (profileResult) {
+            const updateData: Record<string, unknown> = {
+              guppy_profile_scraped_at: profileResult.scrapedAt.toISOString(),
+              guppy_independence_support: profileResult.independenceSupport,
+            };
+
+            if (profileResult.completeness !== null) {
+              updateData.guppy_profile_completeness = profileResult.completeness;
+            }
+
+            if (profileResult.updatedAt) {
+              updateData.guppy_profile_updated_at = profileResult.updatedAt.toISOString();
+            }
+
+            const { error: profileError } = await supabase
+              .from('clinics')
+              .update(updateData)
+              .eq('id', clinic.id);
+
+            if (profileError) {
+              console.error(`Error updating GUPPY profile for ${clinic.name}:`, profileError);
+            }
+          }
+
           guppyStatus = { success: true };
         }
       }
@@ -252,6 +285,40 @@ export async function POST(request: NextRequest) {
 
             if (rankError) {
               console.error(`Error upserting JobMedley rank for ${clinic.name}:`, rankError);
+            }
+          }
+
+          // 重要指標の取得・保存
+          const indicatorsResult = await scrapeAllJobOfferIndicators(
+            clinic.jobmedley_login_id,
+            clinic.jobmedley_password
+          );
+
+          if (indicatorsResult && indicatorsResult.indicators.length > 0) {
+            const indicatorRows = indicatorsResult.indicators.map((indicator) => ({
+              clinic_id: clinic.id,
+              job_offer_id: indicator.jobOfferId,
+              name: indicator.name || `求人 ${indicator.jobOfferId}`,
+              title: indicator.title,
+              has_speed_reply_badge: indicator.hasSpeedReplyBadge,
+              has_staff_voice: indicator.hasStaffVoice,
+              has_workplace_info: indicator.hasWorkplaceInfo,
+              main_photo_url: indicator.mainPhotoUrl,
+              photo_count: indicator.photoCount,
+              feature_tags: indicator.featureTags,
+              days_since_update: indicator.daysSinceUpdate,
+              last_updated_at: indicator.lastUpdatedAt ? indicator.lastUpdatedAt.toISOString() : null,
+              indicators_scraped_at: indicator.scrapedAt.toISOString(),
+            }));
+
+            const { error: indicatorError } = await supabase
+              .from('jobmedley_job_offers')
+              .upsert(indicatorRows, {
+                onConflict: 'clinic_id,job_offer_id',
+              });
+
+            if (indicatorError) {
+              console.error(`Error upserting JobMedley indicators for ${clinic.name}:`, indicatorError);
             }
           }
 

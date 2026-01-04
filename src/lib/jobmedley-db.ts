@@ -269,6 +269,22 @@ export async function getJobOfferSummary(
     return null;
   }
 
+  let featureTags: string[] = [];
+  const rawTags = (data as { feature_tags?: unknown }).feature_tags;
+
+  if (Array.isArray(rawTags)) {
+    featureTags = rawTags.filter((tag): tag is string => typeof tag === 'string');
+  } else if (typeof rawTags === 'string') {
+    try {
+      const parsed = JSON.parse(rawTags);
+      if (Array.isArray(parsed)) {
+        featureTags = parsed.filter((tag: unknown): tag is string => typeof tag === 'string');
+      }
+    } catch {
+      featureTags = [];
+    }
+  }
+
   return {
     jobOfferId: data.job_offer_id,
     name: data.name,
@@ -278,7 +294,74 @@ export async function getJobOfferSummary(
     pageViewCount: data.page_view_count || 0,
     daysSinceUpdate: data.days_since_update || 0,
     photoCount: data.photo_count || 0,
-    featureTags: data.feature_tags || [],
+    featureTags,
     scoutSentCount: data.scout_sent_count || 0,
   };
+}
+
+/**
+ * 求人重要指標を取得
+ * Requirements: PROF-02
+ */
+export async function getJobOfferIndicators(
+  supabase: SupabaseClient,
+  clinicId: string,
+  jobOfferId?: string
+): Promise<{
+  jobOfferId: string;
+  name: string;
+  hasSpeedReplyBadge: boolean;
+  hasStaffVoice: boolean;
+  hasWorkplaceInfo: boolean;
+  photoCount: number;
+  daysSinceUpdate: number | null;
+  featureTags: string[];
+  scrapedAt: string | null;
+}[]> {
+  let query = supabase
+    .from('jobmedley_job_offers')
+    .select('job_offer_id, name, has_speed_reply_badge, has_staff_voice, has_workplace_info, photo_count, days_since_update, feature_tags, indicators_scraped_at')
+    .eq('clinic_id', clinicId)
+    .order('name', { ascending: true });
+
+  if (jobOfferId) {
+    query = query.eq('job_offer_id', jobOfferId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching job offer indicators:', error);
+    return [];
+  }
+
+  return (data || []).map((row) => {
+    let featureTags: string[] = [];
+    const rawTags = (row as { feature_tags?: unknown }).feature_tags;
+
+    if (Array.isArray(rawTags)) {
+      featureTags = rawTags.filter((tag): tag is string => typeof tag === 'string');
+    } else if (typeof rawTags === 'string') {
+      try {
+        const parsed = JSON.parse(rawTags);
+        if (Array.isArray(parsed)) {
+          featureTags = parsed.filter((tag: unknown): tag is string => typeof tag === 'string');
+        }
+      } catch {
+        featureTags = [];
+      }
+    }
+
+    return {
+      jobOfferId: row.job_offer_id,
+      name: row.name,
+      hasSpeedReplyBadge: !!row.has_speed_reply_badge,
+      hasStaffVoice: !!row.has_staff_voice,
+      hasWorkplaceInfo: !!row.has_workplace_info,
+      photoCount: row.photo_count || 0,
+      daysSinceUpdate: row.days_since_update ?? null,
+      featureTags,
+      scrapedAt: row.indicators_scraped_at || null,
+    };
+  });
 }

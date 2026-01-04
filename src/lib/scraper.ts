@@ -637,3 +637,158 @@ export async function scrapeGuppyScoutMessages(
     }
   }
 }
+
+// ============================================
+// GUPPYプロフィール情報取得
+// ============================================
+
+const GUPPY_COMPANY_URL = 'https://www.guppy.jp/service/company';
+
+export interface GuppyProfileInfo {
+  completeness: number | null;  // プロフィール充実度（%）
+  independenceSupport: boolean;  // 独立応援資金設定の有無
+  updatedAt: Date | null;  // プロフィール更新日
+  scrapedAt: Date;
+}
+
+/**
+ * GUPPYプロフィール情報を取得
+ * Requirements: PROF-01
+ */
+export async function scrapeGuppyProfile(
+  clinicId: string,
+  clinicName: string,
+  loginId: string,
+  password: string
+): Promise<GuppyProfileInfo | null> {
+  let browser: Browser | null = null;
+
+  try {
+    browser = await chromium.launch({
+      headless: true,
+    });
+
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    });
+
+    const page = await context.newPage();
+
+    // ログイン
+    await page.goto(GUPPY_LOGIN_URL, { waitUntil: 'networkidle' });
+    await page.fill('input[name="data[Account][login_id]"]', loginId);
+    await page.fill('input[name="data[Account][password]"]', password);
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
+
+    // ログイン確認
+    if (page.url().includes('login')) {
+      console.error(`Login failed for clinic ${clinicName}`);
+      return null;
+    }
+
+    // 企業情報ページに移動
+    await page.goto(GUPPY_COMPANY_URL, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(2000);
+
+    // プロフィール情報を抽出
+    const profileInfo = await page.evaluate(() => {
+      const result: {
+        completeness: number | null;
+        independenceSupport: boolean;
+        updatedAt: string | null;
+      } = {
+        completeness: null,
+        independenceSupport: false,
+        updatedAt: null,
+      };
+
+      // プロフィール充実度を探す
+      const bodyText = document.body.innerText;
+
+      // パターン1: 「充実度：80%」形式
+      const completenessMatch = bodyText.match(/充実度[：:\s]*(\d+)\s*%/);
+      if (completenessMatch) {
+        result.completeness = parseInt(completenessMatch[1], 10);
+      }
+
+      // パターン2: プログレスバーや数値表示
+      const percentElements = document.querySelectorAll('[class*="percent"], [class*="progress"], [class*="complete"]');
+      percentElements.forEach(el => {
+        const text = el.textContent || '';
+        const match = text.match(/(\d+)\s*%/);
+        if (match && !result.completeness) {
+          result.completeness = parseInt(match[1], 10);
+        }
+      });
+
+      // 独立応援資金設定の確認
+      const independenceKeywords = ['独立応援', '独立支援', '開業支援'];
+      for (const keyword of independenceKeywords) {
+        if (bodyText.includes(keyword)) {
+          // 「設定済み」「あり」「有効」などの確認
+          const keywordIndex = bodyText.indexOf(keyword);
+          const contextText = bodyText.substring(keywordIndex, keywordIndex + 50);
+          if (contextText.match(/(設定済み|あり|有効|✓|チェック)/)) {
+            result.independenceSupport = true;
+            break;
+          }
+          // チェックボックスやトグルの状態確認
+          const checkbox = document.querySelector('input[type="checkbox"][name*="independence"], input[type="checkbox"][name*="support"]') as HTMLInputElement;
+          if (checkbox && checkbox.checked) {
+            result.independenceSupport = true;
+            break;
+          }
+        }
+      }
+
+      // 更新日を探す
+      const updatePatterns = [
+        /最終更新[：:\s]*(\d{4}[年\/\-]\d{1,2}[月\/\-]\d{1,2}日?)/,
+        /更新日[：:\s]*(\d{4}[年\/\-]\d{1,2}[月\/\-]\d{1,2}日?)/,
+        /(\d{4}[年\/\-]\d{1,2}[月\/\-]\d{1,2}日?)\s*更新/,
+      ];
+
+      for (const pattern of updatePatterns) {
+        const match = bodyText.match(pattern);
+        if (match) {
+          result.updatedAt = match[1];
+          break;
+        }
+      }
+
+      return result;
+    });
+
+    // 日付文字列をDateに変換
+    let updatedAt: Date | null = null;
+    if (profileInfo.updatedAt) {
+      const dateStr = profileInfo.updatedAt
+        .replace(/年/g, '-')
+        .replace(/月/g, '-')
+        .replace(/日/g, '')
+        .replace(/\//g, '-');
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        updatedAt = parsed;
+      }
+    }
+
+    console.log(`[${clinicName}] GUPPY Profile: completeness=${profileInfo.completeness}%, independence=${profileInfo.independenceSupport}, updated=${updatedAt}`);
+
+    return {
+      completeness: profileInfo.completeness,
+      independenceSupport: profileInfo.independenceSupport,
+      updatedAt,
+      scrapedAt: new Date(),
+    };
+  } catch (error) {
+    console.error(`Error scraping GUPPY profile for clinic ${clinicId}:`, error);
+    return null;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+}

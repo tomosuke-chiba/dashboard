@@ -4,6 +4,21 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { DailyMetrics, ScoutMessage, BitlyClick, JobType, JOB_TYPE_LABELS, PHASE1_JOB_TYPES } from '@/types';
 import { useTheme, ThemeToggle } from '@/hooks/useTheme';
+import { KPISummary, AlertList, SolutionTable } from '@/components/KPICard';
+import { GuppyProfileCard } from '@/components/ProfileCard';
+import {
+  GUPPY_VIEW_KPIS,
+  GUPPY_SCOUT_KPIS,
+  GUPPY_VIEW_SOLUTIONS,
+  GUPPY_SCOUT_SOLUTIONS,
+  createKPIAlert,
+  calculateViewRate as calcViewRate,
+  calculateApplicationRate,
+  calculateRedirectRate,
+  calculateReplyRate,
+  calculateBitlyClickRate,
+  KPIAlert,
+} from '@/lib/kpi';
 
 interface BitlyLinkClick {
   bitly_link_id: string;
@@ -14,7 +29,15 @@ interface BitlyLinkClick {
 }
 
 interface ClinicData {
-  clinic: { id: string; name: string; slug: string };
+  clinic: {
+    id: string;
+    name: string;
+    slug: string;
+    guppy_profile_completeness?: number | null;
+    guppy_independence_support?: boolean | null;
+    guppy_profile_updated_at?: string | null;
+    guppy_profile_scraped_at?: string | null;
+  };
   metrics: DailyMetrics[];
   summary: {
     totalDisplayCount: number;
@@ -127,6 +150,49 @@ export default function GuppyPage() {
     ? data.metrics
     : data.metrics.filter(m => m.job_type === selectedTab);
 
+  // KPIアラート計算
+  const viewRateValue = calcViewRate(data.summary.totalViewCount, data.summary.totalDisplayCount);
+  const applicationRateValue = calculateApplicationRate(data.summary.totalApplicationCount, data.summary.totalViewCount);
+  const redirectRateValue = calculateRedirectRate(data.summary.totalRedirectCount, data.summary.totalViewCount);
+  const replyRateValue = calculateReplyRate(scoutSummary.reply, scoutSummary.sent);
+  const bitlyClickRateValue = calculateBitlyClickRate(totalBitlyClicks, scoutSummary.sent);
+
+  // KPIアラートを生成
+  const viewKPIs = [
+    { ...createKPIAlert(viewRateValue, GUPPY_VIEW_KPIS.viewRate, 'guppy', 'view'), title: '閲覧率' },
+    { ...createKPIAlert(applicationRateValue, GUPPY_VIEW_KPIS.applicationRate, 'guppy', 'view'), title: '応募率' },
+    { ...createKPIAlert(redirectRateValue, GUPPY_VIEW_KPIS.redirectRate, 'guppy', 'view'), title: '自社サイト誘導率' },
+  ];
+
+  const scoutKPIs = [
+    { ...createKPIAlert(bitlyClickRateValue, GUPPY_SCOUT_KPIS.bitlyClickRate, 'guppy', 'scout'), title: 'Bitlyクリック率' },
+    { ...createKPIAlert(replyRateValue, GUPPY_SCOUT_KPIS.scoutReplyRate, 'guppy', 'scout'), title: 'スカウト返信率' },
+  ];
+
+  // 不正検知チェック
+  const fraudAlert = viewRateValue > 30
+    ? createKPIAlert(viewRateValue, GUPPY_VIEW_KPIS.fraudDetection, 'guppy', 'view')
+    : null;
+
+  // すべてのアラートを結合
+  const allAlerts: KPIAlert[] = [
+    ...viewKPIs,
+    ...scoutKPIs,
+    ...(fraudAlert ? [fraudAlert] : []),
+  ];
+
+  const [showSolutions, setShowSolutions] = useState(false);
+  const guppyProfile = {
+    completeness: data.clinic.guppy_profile_completeness ?? null,
+    independenceSupport: data.clinic.guppy_independence_support ?? null,
+    updatedAt: data.clinic.guppy_profile_updated_at ?? null,
+    scrapedAt: data.clinic.guppy_profile_scraped_at ?? null,
+  };
+  const hasProfileData =
+    guppyProfile.completeness !== null ||
+    guppyProfile.updatedAt ||
+    guppyProfile.scrapedAt;
+
   return (
     <div className={`min-h-screen ${isDark ? "bg-slate-900" : "bg-slate-50"}`}>
       <header className={`border-b ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"}`}>
@@ -228,6 +294,115 @@ export default function GuppyPage() {
           <SummaryCard title="自社サイト誘導" value={data.summary.totalRedirectCount} color="purple" />
           <SummaryCard title="応募数" value={data.summary.totalApplicationCount} color="orange" />
         </div>
+
+        {/* プロフィール情報 */}
+        {hasProfileData && (
+          <div className="mb-8">
+            <h2 className={`text-lg font-semibold mb-3 ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
+              プロフィール情報
+            </h2>
+            <div className="max-w-md">
+              <GuppyProfileCard
+                completeness={guppyProfile.completeness}
+                independenceSupport={guppyProfile.independenceSupport}
+                updatedAt={guppyProfile.updatedAt}
+                scrapedAt={guppyProfile.scrapedAt}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* KPIアラートセクション */}
+        <div className={`rounded-lg shadow mb-8 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+          <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'} flex items-center justify-between`}>
+            <div>
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>KPIアラート</h2>
+              <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                閾値に基づく自動判定・改善施策の提案
+              </p>
+            </div>
+            <button
+              onClick={() => setShowSolutions(!showSolutions)}
+              className={`text-sm px-3 py-1.5 rounded-lg transition ${
+                isDark
+                  ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {showSolutions ? '施策対応表を隠す' : '施策対応表を見る'}
+            </button>
+          </div>
+          <div className="p-6">
+            {/* 閲覧経路KPI */}
+            <div className="mb-6">
+              <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                閲覧経路
+              </h3>
+              <KPISummary
+                title=""
+                kpis={viewKPIs.map(kpi => ({
+                  title: kpi.kpiName,
+                  value: kpi.value,
+                  unit: kpi.unit,
+                  level: kpi.level,
+                  message: kpi.message,
+                  solution: kpi.solution,
+                }))}
+              />
+            </div>
+
+            {/* スカウト経路KPI */}
+            <div className="mb-6">
+              <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                スカウト経路
+              </h3>
+              <KPISummary
+                title=""
+                kpis={scoutKPIs.map(kpi => ({
+                  title: kpi.kpiName,
+                  value: kpi.value,
+                  unit: kpi.unit,
+                  level: kpi.level,
+                  message: kpi.message,
+                  solution: kpi.solution,
+                }))}
+              />
+            </div>
+
+            {/* 不正検知アラート */}
+            {fraudAlert && (
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+                <div className="flex items-start">
+                  <span className="text-red-600 dark:text-red-400 text-xl mr-3">🚨</span>
+                  <div>
+                    <p className="text-red-800 dark:text-red-300 font-medium">
+                      不正アクセスの可能性があります
+                    </p>
+                    <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                      閲覧率が{viewRateValue.toFixed(1)}%と異常に高くなっています。GUPPY運営に報告してください。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* アラート一覧 */}
+            <div>
+              <h3 className={`text-sm font-medium mb-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                アラート一覧
+              </h3>
+              <AlertList alerts={allAlerts} />
+            </div>
+          </div>
+        </div>
+
+        {/* 施策対応表（トグル表示） */}
+        {showSolutions && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <SolutionTable title="閲覧経路の改善施策" solutions={GUPPY_VIEW_SOLUTIONS} />
+            <SolutionTable title="スカウト経路の改善施策" solutions={GUPPY_SCOUT_SOLUTIONS} />
+          </div>
+        )}
 
         {/* スカウトメールセクション */}
         <div className="bg-white rounded-lg shadow mb-8">

@@ -1,4 +1,5 @@
 import { Client } from "@notionhq/client";
+import type { QueryDatabaseResponse } from "@notionhq/client/build/src/api-endpoints";
 import {
   addDays,
   startOfMonth,
@@ -178,7 +179,7 @@ export async function refreshDashboardData(
 
   // ページネーションで全件取得
   while (hasMore) {
-    const queryResult = await withTimeout(
+    const queryResult: QueryDatabaseResponse = await withTimeout(
       notion.databases.query({
         database_id: DATABASE_ID,
         start_cursor: startCursor,
