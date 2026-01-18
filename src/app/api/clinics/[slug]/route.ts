@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { validateSourceParameter } from '../source-validation';
 
 export async function GET(
   request: NextRequest,
@@ -9,6 +10,16 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month'); // Format: YYYY-MM
   const jobType = searchParams.get('job_type'); // 'dr', 'dh', 'da', or null for all
+
+  // source パラメータのバリデーション
+  const sourceParam = searchParams.get('source');
+  const sourceValidation = validateSourceParameter(sourceParam);
+
+  if (!sourceValidation.valid) {
+    return NextResponse.json({ error: sourceValidation.error }, { status: 400 });
+  }
+
+  const source = sourceValidation.source;
 
   const supabase = getSupabaseAdmin();
 
