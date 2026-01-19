@@ -238,3 +238,130 @@ claude "
 - Claude Codeでの **擦り合わせ（Phase 2）と最終プラン策定** は **Opus** を使う
 - Claude Codeでの **実装（Phase 3）** は **Sonnet** を使う
 - もし上記のモデル指定で動いていない場合は、**「このモードで実行できていないので切り替えませんか？」** と必ず提案する
+
+---
+
+## ワークフロー仕様書（アイデア → 実装）
+
+### 目的
+- トークン使用量を最小化しつつ、要件品質と実装品質を最大化する
+- ざっくりアイデアから、依存関係を考慮した要件定義と確実な実装につなげる
+
+### 前提
+- Phase 0.5/1/1.5 は Codex CLI を使用
+- Phase 2 は Claude Code（Opus）を使用
+- Phase 3 は Claude Code（Sonnet）を使用
+
+### 成果物一覧
+- `idea-brief.md`（アイデア整理）
+- `requirements-draft.md`（要件ドラフト）
+- `gap-analysis-draft.md`（ギャップ分析ドラフト）
+- `wireframe.md` / `ui-mock.html`（視覚確認）
+- `requirements.md` / `gap-analysis.md`（確定版）
+- `design.md` / `tasks.md` / `spec.json`（設計〜タスク）
+
+### 全体フロー（ステップバイステップ）
+
+**Phase 0.5: アイデア整理（Codex CLI）**
+1. ざっくりアイデア（1-3文）を用意
+2. Codexに入力し、機能名/概要/依存関係を整理
+3. 推奨された機能名を採用し `idea-brief.md` に保存
+
+**Phase 1: 要件定義（Codex CLI）**
+1. `.kiro/specs/{feature}` を作成
+2. `idea-brief.md` を参照させて要件ドラフトを生成
+3. `requirements-draft.md` / `gap-analysis-draft.md` を確認
+
+**Phase 1.5: ワイヤーフレーム確認（Codex CLI）**
+1. `wireframe.md` で情報設計・導線を確認
+2. 判断が難しい場合のみ `ui-mock.html` を作成
+
+**Phase 2: 擦り合わせ（Claude Code / Opus）**
+1. ドラフトをレビューして確定版を作成
+2. `requirements.md` / `gap-analysis.md` を保存
+
+**Phase 3: 設計・実装（Claude Code / Sonnet）**
+1. `/kiro:spec-design {feature}`
+2. `/kiro:spec-tasks {feature}`
+3. `/kiro:spec-impl {feature}`
+
+---
+
+## 具体例: metrics-manual-input
+
+### Phase 0.5（Codex CLI）
+```bash
+codex "
+ざっくりアイデア: 日別メトリクスをカレンダー形式で手動入力したい
+追加情報: 対象ユーザーはCS。既存のmetrics集計と整合が必要。
+
+以下を参照して、機能名/概要/依存関係を整理してください:
+- .kiro/steering/product.md
+- .kiro/steering/tech.md
+- .kiro/steering/structure.md
+- .kiro/specs/
+
+出力要件:
+1. 機能名候補を3つ提示（kebab-caseのスラッグも付与）
+2. 推奨する機能名を1つ選び、1-2文の概要を書く
+3. 依存関係・影響範囲を整理（既存Specとの関係: 関連/依存/衝突の可能性、影響しそうな機能領域/UI/データ）
+4. 仮の前提/未確定事項/要確認事項を列挙
+5. そのまま .kiro/specs/{feature}/idea-brief.md として保存できるMarkdownで出力
+"
+```
+
+```bash
+mkdir -p .kiro/specs/metrics-manual-input
+# 出力を .kiro/specs/metrics-manual-input/idea-brief.md に保存
+```
+
+### Phase 1（Codex CLI）
+```bash
+codex "
+機能名: metrics-manual-input
+概要: カレンダー形式で日別メトリクスを手動入力できるUI
+
+以下を参照してEARS形式で詳細な要件を作成:
+- .kiro/steering/product.md
+- .kiro/steering/tech.md
+- .kiro/steering/structure.md
+- .kiro/settings/templates/specs/requirements-draft.md
+- .kiro/settings/templates/specs/gap-analysis-draft.md
+- .kiro/specs/metrics-manual-input/idea-brief.md
+
+出力:
+- .kiro/specs/metrics-manual-input/requirements-draft.md
+- .kiro/specs/metrics-manual-input/gap-analysis-draft.md
+
+要件内に以下を必ず含める:
+- 依存関係や影響範囲（既存機能/データ/UI）
+- 依存関係が原因で起きうる制約や注意点
+"
+```
+
+### Phase 1.5（Codex CLI）
+```bash
+codex "
+機能名: metrics-manual-input
+対象: requirements-draft.md / gap-analysis-draft.md
+
+要件から主要画面のワイヤーフレームを作成してください。
+出力はテキスト/ASCIIで、情報設計・導線・要素の優先度が分かる形にする。
+保存先: .kiro/specs/metrics-manual-input/wireframe.md
+"
+```
+
+### Phase 2（Claude Code / Opus）
+```bash
+claude "
+.kiro/specs/metrics-manual-input/requirements-draft.md と gap-analysis-draft.md をレビュー。
+最新コードとの整合性を確認し、修正後 requirements.md / gap-analysis.md として確定。
+"
+```
+
+### Phase 3（Claude Code / Sonnet）
+```bash
+/kiro:spec-design metrics-manual-input
+/kiro:spec-tasks metrics-manual-input
+/kiro:spec-impl metrics-manual-input
+```

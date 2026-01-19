@@ -1,0 +1,22 @@
+{
+  "feature_name": "metrics-manual-input",
+  "created_at": "2026-01-19T03:38:55Z",
+  "updated_at": "2026-01-19T05:45:00Z",
+  "language": "ja",
+  "phase": "implementation",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}

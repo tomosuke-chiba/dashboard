@@ -36,6 +36,8 @@ export interface DailyMetrics {
   view_count: number;
   redirect_count: number;
   application_count: number;
+  scout_reply_count: number | null;
+  interview_count: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -159,3 +161,24 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
 
 // Phase 1対応職種
 export const PHASE1_JOB_TYPES: JobType[] = ['dr', 'dh', 'da'];
+
+// 手動入力メトリクスの型定義
+export interface ManualInputEntry {
+  date: string; // YYYY-MM-DD
+  scout_reply_count: number; // 0以上の整数
+  interview_count: number; // 0以上の整数
+}
+
+export interface ManualInputRequest {
+  clinic_id: string; // UUID
+  source: Source;
+  entries: ManualInputEntry[];
+}
+
+export interface ManualMetricsInputProps {
+  clinicId: string;
+  source: Source;
+  isDark: boolean;
+  initialYear?: number;
+  initialMonth?: number;
+}

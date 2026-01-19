@@ -65,22 +65,32 @@ export default function GuppyPage() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<TabType>('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showSolutions, setShowSolutions] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      setError(null);
       const params = new URLSearchParams();
+      params.set('source', 'guppy');
       if (selectedMonth) params.set('month', selectedMonth);
       if (selectedTab !== 'all') params.set('job_type', selectedTab);
 
       const queryString = params.toString();
-      const res = await fetch(`/api/clinics/${slug}${queryString ? `?${queryString}` : ''}`);
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-        if (!selectedMonth && json.currentMonth) {
-          setSelectedMonth(json.currentMonth);
+      try {
+        const res = await fetch(`/api/clinics/${slug}${queryString ? `?${queryString}` : ''}`);
+        const json = await res.json().catch(() => null);
+        if (res.ok) {
+          setData(json);
+          if (!selectedMonth && json?.currentMonth) {
+            setSelectedMonth(json.currentMonth);
+          }
+        } else {
+          setError(json?.error || 'データの取得に失敗しました');
         }
+      } catch {
+        setError('データの取得中にエラーが発生しました');
       }
       setLoading(false);
     }
@@ -93,6 +103,16 @@ export default function GuppyPage() {
         <div className="animate-pulse space-y-3">
           <div className="h-3 w-24 bg-slate-200 rounded"></div>
           <div className="h-3 w-16 bg-slate-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? "bg-slate-900" : "bg-slate-50"}`}>
+        <div className="text-center">
+          <h1 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>{error}</h1>
         </div>
       </div>
     );
@@ -181,7 +201,6 @@ export default function GuppyPage() {
     ...(fraudAlert ? [fraudAlert] : []),
   ];
 
-  const [showSolutions, setShowSolutions] = useState(false);
   const guppyProfile = {
     completeness: data.clinic.guppy_profile_completeness ?? null,
     independenceSupport: data.clinic.guppy_independence_support ?? null,
@@ -233,23 +252,32 @@ export default function GuppyPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {error && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         {/* 月選択 */}
         <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            {data.availableMonths.map((month) => (
-              <button
-                key={month}
-                onClick={() => setSelectedMonth(month)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedMonth === month
-                    ? 'bg-green-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                }`}
-              >
-                {formatMonth(month)}
-              </button>
-            ))}
-          </div>
+          {data.availableMonths.length === 0 ? (
+            <p className="text-sm text-gray-500">表示可能な月がありません。</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {data.availableMonths.map((month) => (
+                <button
+                  key={month}
+                  onClick={() => setSelectedMonth(month)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedMonth === month
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  }`}
+                >
+                  {formatMonth(month)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 職種タブ */}

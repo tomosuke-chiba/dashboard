@@ -6,6 +6,45 @@
 
 ---
 
+## チャット表示テンプレ（毎回必須）
+```
+最終的な機能一覧（確定版）:
+- ...
+
+タスク全体像（現在フェーズの全タスク）:
+- ...
+
+今から取り組むタスク:
+- ...
+
+直近で完了したタスク:
+- ...
+```
+
+## 引き継ぎメモ（ツール/チャット切替時）
+```
+[yyyy-mm-dd hh:mm] feature=...
+phase=... / last_done=... / next=...
+files=... / tests=...
+```
+[2026-01-19 10:47] feature=guppy-data-fix
+phase=実装 / last_done=1.1 / next=1.2
+files=src/app/api/clinics/source-validation.ts, src/app/api/clinics/query-builder.ts, src/app/api/clinics/[slug]/route.ts, src/app/api/clinics/__tests__/source-validation.test.ts, src/app/api/clinics/__tests__/query-builder.test.ts, .kiro/specs/guppy-data-fix/tasks.md / tests=jest --testPathPatterns=source-validation, jest --testPathPatterns=query-builder
+[2026-01-19 11:42] feature=guppy-data-fix
+phase=実装 / last_done=3.3 / next=-
+files=src/app/api/clinics/[slug]/route.ts, src/app/clinic/[slug]/guppy/page.tsx, src/app/api/clinics/__tests__/route.test.ts, jest.setup.js, .kiro/specs/guppy-data-fix/tasks.md / tests=jest --testPathPatterns=route.test, jest --testPathPatterns=source-validation, jest --testPathPatterns=query-builder
+[2026-01-19 13:24] feature=jobmedley-ui-fix
+phase=実装 / last_done=4.3 / next=-
+files=src/app/clinic/[slug]/job-medley/page.tsx, .kiro/specs/jobmedley-ui-fix/tasks.md / tests=manual URL checks
+[2026-01-19 13:32] feature=metrics-manual-input
+phase=実装 / last_done=1.1,2.1,2.2,3.1,4.1(未統合),6.1,6.2 / next=5.1-5.3,4.1補完(既存値反映),7.1
+files=src/app/api/metrics/manual-input/route.ts, src/components/ManualMetricsInput.tsx, src/components/__tests__/ManualMetricsInput.test.tsx, src/app/api/metrics/manual-input/__tests__/route.test.ts, supabase/migrations/013_add_manual_metrics_columns.sql / tests=not run
+[2026-01-19 13:32] feature=clinic-list-enhancement
+phase=spec-init / last_done=spec-init / next=requirements
+files=.kiro/specs/clinic-list-enhancement/spec.json, .kiro/specs/clinic-list-enhancement/requirements.md / tests=-
+
+---
+
 ## cc-sddワークフロー
 
 ```

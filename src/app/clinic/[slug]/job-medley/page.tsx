@@ -107,6 +107,7 @@ export default function JobMedleyPage() {
         ? data.indicators.filter((indicator) => indicator.jobOfferId === selectedJobOfferId)
         : data.indicators)
     : [];
+  const indicatorsToShow = filteredIndicators.length > 0 ? filteredIndicators : data?.indicators ?? [];
 
   useEffect(() => {
     async function fetchClinicName() {
@@ -373,13 +374,13 @@ export default function JobMedleyPage() {
             )}
 
             {/* 求人重要指標 */}
-            {filteredIndicators.length > 0 && (
+            {indicatorsToShow.length > 0 && (
               <div className="mb-8">
                 <h2 className={`text-lg font-semibold mb-3 ${isDark ? "text-slate-100" : "text-slate-800"}`}>
                   求人重要指標
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredIndicators.map((indicator) => (
+                  {indicatorsToShow.map((indicator) => (
                     <JobMedleyIndicatorCard key={indicator.jobOfferId} {...indicator} />
                   ))}
                 </div>
@@ -508,38 +509,6 @@ export default function JobMedleyPage() {
                       <p>クリニック名: {data.rank.clinicName}</p>
                       <p className="mt-1">確認日時: {new Date(data.rank.checkedAt).toLocaleString('ja-JP')}</p>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 重要指標セクション */}
-            {data.indicators && data.indicators.length > 0 && (
-              <div className={`rounded-lg shadow mb-8 ${isDark ? "bg-slate-800" : "bg-white"}`}>
-                <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-200"}`}>
-                  <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
-                    重要指標（検索順位向上のためのチェックポイント）
-                  </h2>
-                  <p className={`text-sm mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                    これらの項目を改善することで検索順位が向上します
-                  </p>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {data.indicators.map((indicator) => (
-                      <JobMedleyIndicatorCard
-                        key={indicator.jobOfferId}
-                        jobOfferId={indicator.jobOfferId}
-                        name={indicator.name}
-                        hasSpeedReplyBadge={indicator.hasSpeedReplyBadge}
-                        hasStaffVoice={indicator.hasStaffVoice}
-                        hasWorkplaceInfo={indicator.hasWorkplaceInfo}
-                        photoCount={indicator.photoCount}
-                        daysSinceUpdate={indicator.daysSinceUpdate}
-                        featureTags={indicator.featureTags}
-                        scrapedAt={indicator.scrapedAt}
-                      />
-                    ))}
                   </div>
                 </div>
               </div>
