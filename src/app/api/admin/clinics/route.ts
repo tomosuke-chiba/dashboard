@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search') || '';
   const month = searchParams.get('month') || getCurrentMonth();
+  const [periodYear, periodMonth] = month.split('-').map((value) => Number(value));
+  const monthStart = `${month}-01`;
+  const monthEnd = `${month}-31`;
 
   try {
     // 3. クリニック一覧取得
@@ -42,55 +45,109 @@ export async function GET(request: NextRequest) {
         // メトリクス集計（GUPPY）
         const { data: guppyMetrics } = await supabase
           .from('metrics')
-          .select('application_count, pv_count, display_count, redirect_count, date')
+          .select('application_count, view_count, display_count, redirect_count, date, search_rank')
           .eq('clinic_id', clinic.id)
           .eq('source', 'guppy')
-          .gte('date', `${month}-01`)
-          .lte('date', `${month}-31`);
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
 
-        // JobMedley メトリクス
-        const { data: jobmedleyMetrics } = await supabase
-          .from('jobmedley_job_offers')
-          .select('application_count, pv_count, date')
+        // JobMedley 日別メトリクス（PV/応募/送信/検索順位）
+        const { data: jobmedleyDaily } = await supabase
+          .from('jobmedley_scouts')
+          .select('application_count_total, page_view_count, sent_count, search_rank, date')
           .eq('clinic_id', clinic.id)
-          .gte('date', `${month}-01`)
-          .lte('date', `${month}-31`);
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
 
         // Quacareer メトリクス
         const { data: quacareerMetrics } = await supabase
           .from('metrics')
-          .select('application_count, pv_count, display_count, redirect_count, date')
+          .select('application_count, view_count, display_count, redirect_count, date, search_rank')
           .eq('clinic_id', clinic.id)
           .eq('source', 'quacareer')
-          .gte('date', `${month}-01`)
-          .lte('date', `${month}-31`);
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
+
+        // スカウト送信数（GUPPY/Quacareer）
+        const { data: scoutMessages } = await supabase
+          .from('scout_messages')
+          .select('sent_count, source, date')
+          .eq('clinic_id', clinic.id)
+          .in('source', ['guppy', 'quacareer'])
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
+
+        // 手動入力メトリクス（返信/面接）
+        const { data: manualMetrics } = await supabase
+          .from('metrics')
+          .select('scout_reply_count, interview_count, date')
+          .eq('clinic_id', clinic.id)
+          .gte('date', monthStart)
+          .lte('date', monthEnd);
+
+        // JobMedley 採用決定数（月次）
+        const { data: jobmedleyAnalysis } = await supabase
+          .from('jobmedley_analysis')
+          .select('hire_count')
+          .eq('clinic_id', clinic.id)
+          .eq('period_year', periodYear)
+          .eq('period_month', periodMonth)
+          .maybeSingle();
 
         // メトリクス合計
         const guppySum = (guppyMetrics || []).reduce(
           (acc, m) => ({
             applicationCount: acc.applicationCount + (m.application_count || 0),
-            viewCount: acc.viewCount + (m.pv_count || 0),
+            viewCount: acc.viewCount + (m.view_count || 0),
             displayCount: acc.displayCount + (m.display_count || 0),
             redirectCount: acc.redirectCount + (m.redirect_count || 0),
           }),
           { applicationCount: 0, viewCount: 0, displayCount: 0, redirectCount: 0 }
         );
 
-        const jobmedleySum = (jobmedleyMetrics || []).reduce(
+        const jobmedleySum = (jobmedleyDaily || []).reduce(
           (acc, m) => ({
-            applicationCount: acc.applicationCount + (m.application_count || 0),
-            viewCount: acc.viewCount + (m.pv_count || 0),
+            applicationCount: acc.applicationCount + (m.application_count_total || 0),
+            viewCount: acc.viewCount + (m.page_view_count || 0),
+            scoutSentCount: acc.scoutSentCount + (m.sent_count || 0),
           }),
-          { applicationCount: 0, viewCount: 0 }
+          { applicationCount: 0, viewCount: 0, scoutSentCount: 0 }
         );
 
         const quacareerSum = (quacareerMetrics || []).reduce(
           (acc, m) => ({
             applicationCount: acc.applicationCount + (m.application_count || 0),
-            viewCount: acc.viewCount + (m.pv_count || 0),
+            viewCount: acc.viewCount + (m.view_count || 0),
           }),
           { applicationCount: 0, viewCount: 0 }
         );
+
+        const scoutSentSum = (scoutMessages || []).reduce(
+          (acc, m) => acc + (m.sent_count || 0),
+          0
+        );
+
+        const totalScoutReplyCount = (manualMetrics || []).reduce(
+          (acc, m) => acc + (m.scout_reply_count ?? 0),
+          0
+        );
+
+        const totalInterviewCount = (manualMetrics || []).reduce(
+          (acc, m) => acc + (m.interview_count ?? 0),
+          0
+        );
+
+        const missingManualMetrics = !(manualMetrics || []).some(
+          (m) => m.scout_reply_count !== null || m.interview_count !== null
+        );
+
+        const searchRanks = {
+          guppy: getLatestSearchRank(guppyMetrics || []),
+          jobmedley: getLatestSearchRank(jobmedleyDaily || []),
+          quacareer: getLatestSearchRank(quacareerMetrics || []),
+        };
+
+        const totalHireCount = jobmedleyAnalysis?.hire_count || 0;
 
         const metricsSummary = {
           totalApplicationCount:
@@ -103,6 +160,12 @@ export async function GET(request: NextRequest) {
             quacareerSum.viewCount,
           totalDisplayCount: guppySum.displayCount,
           totalRedirectCount: guppySum.redirectCount,
+          totalScoutSentCount: scoutSentSum + jobmedleySum.scoutSentCount,
+          totalScoutReplyCount: missingManualMetrics ? null : totalScoutReplyCount,
+          totalInterviewCount: missingManualMetrics ? null : totalInterviewCount,
+          totalHireCount,
+          missingManualMetrics,
+          searchRanks,
         };
 
         // 目標進捗取得
@@ -133,8 +196,10 @@ export async function GET(request: NextRequest) {
         // 最新データ日付
         const allDates = [
           ...(guppyMetrics || []).map((m) => m.date),
-          ...(jobmedleyMetrics || []).map((m) => m.date),
+          ...(jobmedleyDaily || []).map((m) => m.date),
           ...(quacareerMetrics || []).map((m) => m.date),
+          ...(manualMetrics || []).map((m) => m.date),
+          ...(scoutMessages || []).map((m) => m.date),
         ].filter(Boolean);
         const latestDate = allDates.length > 0 ? allDates.sort().reverse()[0] : null;
 
@@ -164,4 +229,17 @@ export async function GET(request: NextRequest) {
 function getCurrentMonth(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getLatestSearchRank<T extends { date: string; search_rank: number | null }>(
+  rows: T[]
+): number | null {
+  if (rows.length === 0) return null;
+  let latest = rows[0];
+  for (const row of rows) {
+    if (row.date > latest.date) {
+      latest = row;
+    }
+  }
+  return latest.search_rank ?? null;
 }

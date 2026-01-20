@@ -122,8 +122,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | bd8a135 0119最小コスト最大成果 workflow実装 |
-| Updated | 2026-01-19 13:37:51 |
+| Last Commit | 001dbab GUPPY修正完了+そのほか途中 |
+| Updated | 2026-01-20 10:01:00 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports

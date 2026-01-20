@@ -14,6 +14,16 @@ interface ClinicSummary {
     totalViewCount: number;
     totalDisplayCount: number;
     totalRedirectCount: number;
+    totalScoutSentCount: number;
+    totalScoutReplyCount: number | null;
+    totalInterviewCount: number | null;
+    totalHireCount: number;
+    missingManualMetrics: boolean;
+    searchRanks: {
+      guppy: number | null;
+      jobmedley: number | null;
+      quacareer: number | null;
+    };
   };
   goalProgress: {
     totalTargetCount: number;
@@ -35,6 +45,12 @@ export default function ClinicListPage() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+
+  const formatRank = (rank: number | null) => (rank === null ? '-' : `${rank}位`);
+  const formatWithUnit = (value: number | null, unit: string) =>
+    value === null ? '-' : `${value.toLocaleString()}${unit}`;
+  const formatManualWithUnit = (value: number | null, unit: string, missing: boolean) =>
+    missing ? '未入力' : formatWithUnit(value, unit);
 
   // データ取得
   const fetchClinics = useCallback(async () => {
@@ -178,36 +194,58 @@ export default function ClinicListPage() {
                 </div>
 
                 {/* メトリクス */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <p
-                      className={`text-xs font-medium uppercase mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
-                    >
-                      応募数
-                    </p>
-                    <p
-                      className={`text-2xl font-semibold ${
-                        clinic.metrics.totalApplicationCount > 0
-                          ? 'text-emerald-500'
-                          : isDark
-                            ? 'text-slate-100'
-                            : 'text-slate-800'
-                      }`}
-                    >
-                      {clinic.metrics.totalApplicationCount}
-                    </p>
+                <div className="mb-4 space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>検索順位</span>
+                    <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                      G:{formatRank(clinic.metrics.searchRanks.guppy)} J:{formatRank(clinic.metrics.searchRanks.jobmedley)} Q:{formatRank(clinic.metrics.searchRanks.quacareer)}
+                    </span>
                   </div>
-                  <div>
-                    <p
-                      className={`text-xs font-medium uppercase mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
-                    >
-                      閲覧数
-                    </p>
-                    <p
-                      className={`text-2xl font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}
-                    >
-                      {clinic.metrics.totalViewCount.toLocaleString()}
-                    </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>PV</span>
+                      <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                        {formatWithUnit(clinic.metrics.totalViewCount, '件')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>応募数</span>
+                      <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                        {formatWithUnit(clinic.metrics.totalApplicationCount, '件')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>スカウト送信数</span>
+                      <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                        {formatWithUnit(clinic.metrics.totalScoutSentCount, '通')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>スカウト返信数</span>
+                      <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                        {formatManualWithUnit(
+                          clinic.metrics.totalScoutReplyCount,
+                          '通',
+                          clinic.metrics.missingManualMetrics
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>面接設定数</span>
+                      <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                        {formatManualWithUnit(
+                          clinic.metrics.totalInterviewCount,
+                          '件',
+                          clinic.metrics.missingManualMetrics
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>採用決定数</span>
+                      <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>
+                        {formatWithUnit(clinic.metrics.totalHireCount, '人')}
+                      </span>
+                    </div>
                   </div>
                 </div>
 

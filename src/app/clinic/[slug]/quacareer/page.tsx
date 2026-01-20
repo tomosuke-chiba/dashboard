@@ -10,6 +10,7 @@ import {
   createKPIAlert,
   KPIAlert,
 } from '@/lib/kpi';
+import ManualMetricsInput from '@/components/ManualMetricsInput';
 
 interface QuacareerDashboardData {
   totalApplicants: number;
@@ -43,6 +44,7 @@ export default function QuacareerPage() {
 
   const [data, setData] = useState<QuacareerData | null>(null);
   const [clinicName, setClinicName] = useState<string>(slug);
+  const [clinicId, setClinicId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedJobType, setSelectedJobType] = useState<JobTypeFilter>('all');
@@ -55,6 +57,9 @@ export default function QuacareerPage() {
           const json = await res.json();
           if (json.clinic?.name) {
             setClinicName(json.clinic.name);
+          }
+          if (json.clinic?.id) {
+            setClinicId(json.clinic.id);
           }
         }
       } catch {
@@ -347,7 +352,7 @@ export default function QuacareerPage() {
             </div>
 
             {/* スカウトメール一覧 */}
-            <div className={`rounded-lg shadow overflow-hidden ${isDark ? "bg-slate-800" : "bg-white"}`}>
+            <div className={`rounded-lg shadow overflow-hidden mb-8 ${isDark ? "bg-slate-800" : "bg-white"}`}>
               <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-200"}`}>
                 <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
                   スカウトメール一覧
@@ -414,6 +419,27 @@ export default function QuacareerPage() {
                 </table>
               </div>
             </div>
+
+            {/* 手動入力セクション（スカウト返信数・面接設定数） */}
+            {clinicId && (
+              <div className={`rounded-lg shadow ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-200"}`}>
+                  <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                    手動入力（スカウト返信数・面接設定数）
+                  </h2>
+                  <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                    カレンダー形式で日別データを入力できます
+                  </p>
+                </div>
+                <div className="p-6">
+                  <ManualMetricsInput
+                    clinicId={clinicId}
+                    source="quacareer"
+                    isDark={isDark}
+                  />
+                </div>
+              </div>
+            )}
           </>
         ) : null}
       </main>

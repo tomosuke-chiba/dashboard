@@ -6,6 +6,7 @@ import { DailyMetrics, ScoutMessage, BitlyClick, JobType, JOB_TYPE_LABELS, PHASE
 import { useTheme, ThemeToggle } from '@/hooks/useTheme';
 import { KPISummary, AlertList, SolutionTable } from '@/components/KPICard';
 import { GuppyProfileCard } from '@/components/ProfileCard';
+import ManualMetricsInput from '@/components/ManualMetricsInput';
 import {
   GUPPY_VIEW_KPIS,
   GUPPY_SCOUT_KPIS,
@@ -510,6 +511,25 @@ export default function GuppyPage() {
             </div>
           </div>
         )}
+
+        {/* 手動入力セクション */}
+        <div className={`rounded-lg shadow mb-8 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+          <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+            <h2 className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
+              手動入力（スカウト返信数・面接設定数）
+            </h2>
+            <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+              カレンダー形式で日別データを入力できます
+            </p>
+          </div>
+          <div className="p-6">
+            <ManualMetricsInput
+              clinicId={data.clinic.id}
+              source="guppy"
+              isDark={isDark}
+            />
+          </div>
+        </div>
 
         {/* 日別データテーブル */}
         <div className="bg-white rounded-lg shadow overflow-hidden">

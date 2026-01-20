@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { formatInTimeZone } from 'date-fns-tz';
 import { scrapeGuppyByJobType, scrapeGuppyScoutMessages, scrapeGuppyProfile } from '@/lib/scraper';
-import { scrapeAllJobOfferIndicators, scrapeJobMedley } from '@/lib/jobmedley-scraper';
+import { scrapeAllJobOfferIndicators, scrapeJobMedley, scrapeJobMedleyDailyBatch } from '@/lib/jobmedley-scraper';
+import { saveDailyScrapingResult } from '@/lib/jobmedley-db';
 import { scrapeQuacareer } from '@/lib/quacareer-scraper';
 import { sendDiscordNotification, sendViewRateAlert, isViewRateAbnormal, calculateViewRate } from '@/lib/discord';
 import { fetchAllClinicsBitlyClicks, fetchAndSaveBitlyLinkClicks } from '@/lib/bitly';
@@ -286,6 +287,41 @@ export async function POST(request: NextRequest) {
             if (rankError) {
               console.error(`Error upserting JobMedley rank for ${clinic.name}:`, rankError);
             }
+          }
+
+          // 【新規追加】日別データ取得
+          try {
+            console.log(`JobMedley: Starting daily batch scrape for ${clinic.name}...`);
+
+            // 検索URL設定（クリニックに設定されている場合）
+            const searchUrls = new Map<string, string>();
+            if (clinic.jobmedley_search_url) {
+              searchUrls.set('', clinic.jobmedley_search_url); // 全求人合算用
+            }
+
+            const dailyBatchResult = await scrapeJobMedleyDailyBatch(
+              clinic.jobmedley_login_id,
+              clinic.jobmedley_password,
+              clinic.id,
+              clinic.name,
+              jstYear,
+              jstMonth,
+              searchUrls
+            );
+
+            if (dailyBatchResult) {
+              const saveResult = await saveDailyScrapingResult(supabase, dailyBatchResult);
+              console.log(`JobMedley daily data saved for ${clinic.name}: ${saveResult.metricsCount} metrics, ${saveResult.jobOffersCount} job offers`);
+
+              if (!saveResult.success) {
+                console.error(`Some daily data failed to save for ${clinic.name}:`, saveResult.errors);
+              }
+            } else {
+              console.log(`JobMedley: No daily data returned for ${clinic.name}`);
+            }
+          } catch (dailyError) {
+            console.error(`JobMedley daily batch failed for ${clinic.name}:`, dailyError);
+            // 日別データ取得失敗でも全体は成功とする
           }
 
           // 重要指標の取得・保存

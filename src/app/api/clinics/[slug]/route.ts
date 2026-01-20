@@ -50,7 +50,7 @@ export async function GET(
     return NextResponse.json({ error: sourceValidation.error }, { status: 400 });
   }
 
-  const source = sourceValidation.source;
+  const source = sourceValidation.source ?? null;
 
   const supabase = getSupabaseAdmin();
 

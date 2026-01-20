@@ -1,0 +1,15 @@
+{
+  "name": "data-fetch-enhancement",
+  "description": "GUPPY/JobMedleyの日別データ取得と検索順位表示の強化",
+  "language": "ja",
+  "status": "completed",
+  "priority": "P0",
+  "createdAt": "2026-01-20",
+  "completedAt": "2026-01-20",
+  "phases": {
+    "requirements": "completed",
+    "design": "completed",
+    "tasks": "completed",
+    "implementation": "completed"
+  }
+}

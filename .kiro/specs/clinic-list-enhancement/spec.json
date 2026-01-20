@@ -1,22 +1,23 @@
 {
   "feature_name": "clinic-list-enhancement",
-  "created_at": "2026-01-19T13:31:57:z",
-  "updated_at": "2026-01-19T13:31:57:z",
+  "created_at": "2026-01-19T15:35:26+09:00",
+  "updated_at": "2026-01-20T00:00:00+09:00",
   "language": "ja",
-  "phase": "initialized",
+  "phase": "completed",
   "approvals": {
     "requirements": {
-      "generated": false,
-      "approved": false
+      "generated": true,
+      "approved": true
     },
     "design": {
-      "generated": false,
-      "approved": false
+      "generated": true,
+      "approved": true
     },
     "tasks": {
-      "generated": false,
-      "approved": false
+      "generated": true,
+      "approved": true
     }
   },
-  "ready_for_implementation": false
+  "ready_for_implementation": true,
+  "implementation_completed": true
 }

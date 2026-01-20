@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTheme, ThemeToggle } from '@/hooks/useTheme';
 import { JobMedleyIndicatorCard } from '@/components/ProfileCard';
+import ManualMetricsInput from '@/components/ManualMetricsInput';
 
 interface JobMedleyAnalysisData {
   period: string;
@@ -490,6 +491,27 @@ export default function JobMedleyPage() {
                 </div>
               </div>
             </div>
+
+            {/* 手動入力セクション（スカウト返信数・面接設定数） */}
+            {clinicId && (
+              <div className={`rounded-lg shadow mb-8 ${isDark ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`px-6 py-4 border-b ${isDark ? "border-slate-700" : "border-slate-200"}`}>
+                  <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-800"}`}>
+                    手動入力（スカウト返信数・面接設定数）
+                  </h2>
+                  <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                    カレンダー形式で日別データを入力できます
+                  </p>
+                </div>
+                <div className="p-6">
+                  <ManualMetricsInput
+                    clinicId={clinicId}
+                    source="jobmedley"
+                    isDark={isDark}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* 検索順位 */}
             {data.rank && (

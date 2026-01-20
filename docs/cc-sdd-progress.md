@@ -42,6 +42,45 @@ files=src/app/api/metrics/manual-input/route.ts, src/components/ManualMetricsInp
 [2026-01-19 13:32] feature=clinic-list-enhancement
 phase=spec-init / last_done=spec-init / next=requirements
 files=.kiro/specs/clinic-list-enhancement/spec.json, .kiro/specs/clinic-list-enhancement/requirements.md / tests=-
+[2026-01-19 13:41] feature=clinic-list-enhancement
+phase=spec-requirements / last_done=requirements / next=design
+files=.kiro/specs/clinic-list-enhancement/requirements.md, .kiro/specs/clinic-list-enhancement/spec.json / tests=-
+[2026-01-19 13:46] feature=clinic-list-enhancement
+phase=spec-wireframe / last_done=wireframe / next=design
+files=.kiro/specs/clinic-list-enhancement/wireframe.md / tests=-
+[2026-01-19 14:12] feature=clinic-list-enhancement
+phase=spec-requirements / last_done=decision-update / next=design
+files=.kiro/specs/clinic-list-enhancement/requirements.md / tests=-
+[2026-01-19 15:31] feature=clinic-list-enhancement
+phase=spec-requirements / last_done=decision-update(検索順位=媒体別) / next=design
+files=.kiro/specs/clinic-list-enhancement/requirements.md, .kiro/specs/clinic-list-enhancement/wireframe.md / tests=-
+[2026-01-19 15:35] feature=clinic-list-enhancement
+phase=spec-design / last_done=requirements-approved / next=design
+files=.kiro/specs/clinic-list-enhancement/spec.json / tests=-
+[2026-01-19 17:22] feature=clinic-list-enhancement
+phase=spec-design / last_done=design-generated / next=design-approval
+files=.kiro/specs/clinic-list-enhancement/design.md, .kiro/specs/clinic-list-enhancement/spec.json / tests=-
+[2026-01-19 17:25] feature=clinic-list-enhancement
+phase=spec-tasks / last_done=tasks-generated / next=tasks-approval
+files=.kiro/specs/clinic-list-enhancement/tasks.md, .kiro/specs/clinic-list-enhancement/spec.json / tests=-
+[2026-01-19 17:42] feature=clinic-list-enhancement
+phase=implementation / last_done=1.1-1.2(partial),2.1-2.2(partial) / next=1.3,3.1,4.1-4.3
+files=src/app/api/admin/clinics/route.ts, src/app/clinic/page.tsx / tests=not run
+[2026-01-19 17:43] feature=clinic-list-enhancement
+phase=implementation / last_done=1.1-1.3,2.1-2.2,3.1 / next=4.1-4.3
+files=src/app/api/admin/clinics/route.ts, src/app/clinic/page.tsx, .kiro/specs/clinic-list-enhancement/tasks.md / tests=not run
+[2026-01-19 18:04] feature=clinic-list-enhancement
+phase=implementation / last_done=task-4.3-checklist-update / next=4.1-4.3
+files=.kiro/specs/clinic-list-enhancement/tasks.md / tests=-
+[2026-01-19 15:30] feature=guppy-data-fix
+phase=completed / last_done=all-tasks / next=-
+files=src/app/api/clinics/[slug]/route.ts, src/app/clinic/[slug]/guppy/page.tsx, src/app/api/clinics/source-validation.ts, src/app/api/clinics/query-builder.ts, .kiro/specs/guppy-data-fix/tasks.md, .kiro/specs/guppy-data-fix/spec.json, CLAUDE.md / tests=npm run build (success)
+[2026-01-20 00:00] feature=clinic-list-enhancement
+phase=completed / last_done=all-tasks(1.1-4.3) / next=-
+files=src/app/api/admin/clinics/route.ts, src/app/clinic/page.tsx, src/app/api/admin/clinics/__tests__/route.test.ts, src/app/clinic/__tests__/page.test.tsx, .kiro/specs/clinic-list-enhancement/tasks.md, .kiro/specs/clinic-list-enhancement/spec.json, .kiro/specs/clinic-list-enhancement/completion-summary.md, CLAUDE.md / tests=npm test (22/22 passed), npm run build (success)
+[2026-01-20 09:30] feature=ALL
+phase=documentation-update / last_done=CLAUDE.md/cc-sdd-progress.md更新 / next=-
+note=全5Spec完了を確認・反映（jobmedley-daily-data, guppy-data-fix, metrics-manual-input, jobmedley-ui-fix, clinic-list-enhancement）
 
 ---
 
@@ -61,14 +100,15 @@ files=.kiro/specs/clinic-list-enhancement/spec.json, .kiro/specs/clinic-list-enh
 
 ## 全体進捗
 
-| ステップ | ステータス | 備考 |
-|----------|------------|------|
-| Steering（プロジェクト記憶） | ⬜ 未着手 | 初回のみ必要 |
-| Phase 1-A: 職種別データ取得 | ⬜ 未着手 | |
-| Phase 1-B: スカウトメール機能 | ⬜ 未着手 | |
-| Phase 1-C: 閲覧率アラート | ⬜ 未着手 | |
-| Phase 1-D: Bitly連携 | ⬜ 未着手 | |
-| Phase 1-E: UI更新 | ⬜ 未着手 | |
+| Spec名 | ステータス | 完了日 | 備考 |
+|--------|-----------|--------|------|
+| jobmedley-daily-data | ✅ 完了 | 2026-01-01 | 日別データ取得機能 |
+| guppy-data-fix | ✅ 完了 | 2026-01-19 | GUPPYデータ表示修正 |
+| metrics-manual-input | ✅ 完了 | 2026-01-19 | 手動入力UI実装 |
+| jobmedley-ui-fix | ✅ 完了 | 2026-01-20 | UI重複修正 |
+| clinic-list-enhancement | ✅ 完了 | 2026-01-20 | 一覧画面KPI拡張 |
+
+**🎉 計画済みのすべてのSpec完了！**
 
 ---
 
