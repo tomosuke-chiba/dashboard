@@ -41,6 +41,14 @@ Notion案件進捗ダッシュボード（/dashboard/sales）の集計・可視�
   - [x] useThemeフック実装（テーマ切替・永続化）
   - [x] /dashboard/sales ページ完成
 
+- 🎉 **全Spec完了** (2026-01-01〜2026-01-20)
+  - [x] jobmedley-daily-data: ジョブメドレー日別データ取得機能 (2026-01-01)
+  - [x] guppy-data-fix: GUPPYデータ表示修正 (2026-01-19)
+  - [x] metrics-manual-input: 手動入力UI実装 (2026-01-19)
+  - [x] jobmedley-ui-fix: UI重複修正 (2026-01-20)
+  - [x] clinic-list-enhancement: 一覧画面7KPI表示拡張 (2026-01-20)
+  - [x] data-fetch-enhancement: JobMedley日別データ取得有効化 (2026-01-20)
+
 ### 次にやること
 
 **Notion案件進捗ダッシュボード**
@@ -60,7 +68,10 @@ Notion案件進捗ダッシュボード（/dashboard/sales）の集計・可視�
 **Phase 2: ジョブメドレー対応**（後回し）
 
 ### 詰まっていること
-- なし
+- **検索順位の表示/取得問題**: 各媒体（GUPPY/ジョブメドレー/Quacareer）で検索順位が正しく表示されていない可能性
+  - 検索順位取得ロジックの確認が必要
+  - UIへの表示フロー確認が必要
+- **完成形との乖離**: 具体的にどの部分が期待と異なるか要確認
 
 ### 次回の最初に実行するコマンド
 ```bash
@@ -122,8 +133,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | 001dbab GUPPY修正完了+そのほか途中 |
-| Updated | 2026-01-20 10:01:00 |
+| Last Commit | 8a4b2f4 0120 |
+| Updated | 2026-01-27 11:51:33 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
