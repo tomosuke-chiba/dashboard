@@ -104,20 +104,28 @@ For global workflow rules, see `~/.claude/CLAUDE.md`.
 
 ## セッション引き継ぎメモ
 
-### 最終更新: 2026-01-27
+### 最終更新: 2026-02-09
 
 **完了内容**:
 - グローバルワークフロー設定を `~/.claude/CLAUDE.md` に移行
-- Claude Code + Antigravity ハイブリッドワークフローを採用
-- 2層品質ゲートシステムを導入
+- **Claude Code + Codex ハイブリッドワークフローに移行**（旧: Antigravity）
+- 2層品質ゲートシステムを更新（Layer 2: 実行的品質ゲート）
+- Phase 1.5（UI検証）をPhase 2（設計）に統合
+- Phase 3（実装）をCodexに移行（旧: Claude Code/Sonnet）
+- Phase 4（QA）をClaude Code Opus + MCP Browser Toolsに変更
+
+**ワークフロー概要（新）**:
+- Phase 0.5〜2: Claude Code (Opus) — 設計・要件・アーキテクチャ
+- Phase 3: **Codex (GPT-5.3)** — 実装（走らせて放置）
+- Phase 4: Claude Code (Opus) + MCP Browser — レビュー・動作確認
+- Phase 5: **Codex** → Claude Code (Opus) — テスト実行→影響分析
+
+**核心**: Opus で設計 → Codex で実装 → Opus でレビュー
 
 **次のステップ**:
-新規機能開発時は、グローバルワークフロー（`~/.claude/CLAUDE.md`）に従う:
-- Phase 0.5〜2: Claude Code (Opus)
-- Phase 1.5, 4: Antigravity (Opus)
-- Phase 3, 5: Claude Code (Sonnet)
+新規機能開発時は、グローバルワークフロー（`~/.claude/CLAUDE.md`）に従う
 
 ---
 
-_Last Updated: 2026-01-27_
+_Last Updated: 2026-02-09_
 _For global workflow rules, see `~/.claude/CLAUDE.md`_

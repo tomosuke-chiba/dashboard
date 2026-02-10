@@ -133,8 +133,8 @@ npm run dev
 | Node | v25.2.1 |
 | npm | 11.6.2 |
 | Branch | main |
-| Last Commit | 521c79d 0127 コミット |
-| Updated | 2026-01-28 10:33:01 |
+| Last Commit | 210e8cd CCode-Anti 使い方フロー |
+| Updated | 2026-02-10 15:58:31 |
 <!-- AUTO-UPDATED-END -->
 
 ### Ports
